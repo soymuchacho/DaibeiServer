@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p>please input your username and password!</p>
+<form action="login" method="post">
+    username: <input type="text" name="username"> <br>
+    password: <input type="text" name="password"> <br>
+    {% csrf_token %}
+    {{ form }}
+    {{ private }}
+    <input type="submit" value="submit">    
+</form>
+</body>
+</html>
