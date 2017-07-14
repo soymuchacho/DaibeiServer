@@ -1,3 +1,4 @@
+#conding=utf-8
 """
 Django settings for DaibeiServer project.
 
@@ -85,24 +86,87 @@ DATABASES = {
 # Caches
 CACHES = {
     'default' : {
-        'BACKEND' : 'redis_cache.RedisCache',
-        'LOCATION' : [
-            '127.0.0.1:8000',
-        ],
+        'BACKEND' : 'django_redis.cache.RedisCache',
+        'LOCATION' : 'redis://127.0.0.1:6379/1',
         'OPTIONS': {
-            'DB' : 1,
-            'PASSWORD' : 'yadayada',
-            'PARSER_CLASS' : 'redis.connection.HiredisParser',
-            'CONNECTION_POOL_CLASS' : 'redis.BlockingConnectionPool',
-            'CONNECTION_POOL_CLASS_KWARGS': {
-                'max_connections' : 50,
-                'timeout' : 20,
-            },
-            'MAX_CONNECTIONS': 1000,
-            'PICKLE_VERSION' : -1,
+            'CLIENT_CLASS':'django_redis.client.DefaultClient',
         },
     },
 }
+
+# LOG 
+LOGGING = {
+    'version' : 1,                  
+    'disable_existing_loggers' : True,  
+    
+    'formatters' : {                    
+        
+        'verbose' : {                   
+            'format' : '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple' : {                    
+            'format' : '%(levelname)s %(asctime)s %(module)s %(message)s'
+        },
+    },
+    
+    'filters' : {                       
+        'special' : {                   
+     
+            'require_debug_true' : {
+                '()' : 'django.utils.log.RequireDebugTrue',
+                'foo' : 'bar',
+            },
+        },                 
+    },
+    
+    'handlers' : {                          
+    
+        'null' : {                      
+            'level' : 'DEBUG',
+            'class' : 'django.utils.log.NullHandler'
+        },
+
+        'console' : {                   
+            'level' : 'DEBUG',
+            'class' : 'logging.StreamHandler',
+        },
+
+        'default' : {
+            'level' : 'DEBUG',
+            'class' : 'logging.handlers.RotatingFileHandler',
+            'filename' : '/root/log/DaibeiDebug.log',
+            'formatter' : 'verbose',
+        },
+
+        'mail_admins' : {                   
+                                            
+            'level' : 'ERROR',
+            'class' : 'django.utils.log.AdminEmailHandler',
+            'filters' : ['special']
+        }
+    },
+
+    'loggers' : {                   
+        'django' : {                        
+            'handlers' : ['null'],
+            'propagate' : 'True',
+            'level' : 'INFO',
+        },
+        
+        'django.request' : {        
+            'handlers' : ['mail_admins'],
+            'level' : 'ERROR',
+            'propagate' : 'False',
+        },
+
+        'DaibeiServer.custom' : {  
+            'handlers' : ['default','console','mail_admins'],
+            'level' : 'INFO',
+            'filters' : ['special'],
+        },
+    },
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/

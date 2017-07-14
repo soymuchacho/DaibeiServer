@@ -18,7 +18,8 @@ from login import views as login_views
 
 urlpatterns = [
     url(r'^$',login_views.index,name='index'),
-    url(r'^AdvanceLogin$',login_views.AdvanceLogin,name='AdvanceLogin'),
+    url(r'^register$',login_views.Register,name='Register'),
+    url(r'^advancelogin$',login_views.AdvanceLogin,name='advancelogin'),
     url(r'^login$',login_views.Authentication),
     url(r'^admin/', include(admin.site.urls)),
 ]

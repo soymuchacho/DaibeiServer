@@ -11,6 +11,17 @@ def RSAGenerateKey():
 
 # 私钥解密
 def RSADecrypt(crypto,privkey):
-    message = rsa.decrypt(crypto,privkey)
+    decode_privkey = base64.decodestring(privkey.load_pkcs1())
+    message = rsa.decrypt(crypto,decode_privkey)
     return message
+
+
+# base64解密
+def Base64Decode(str):
+    return base64.decodestring(str)
+
+# base64加密
+def Base64Encode(str):
+    return base64.encodestring(str)
+
 

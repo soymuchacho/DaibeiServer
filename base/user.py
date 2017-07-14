@@ -7,7 +7,6 @@ class User:
         self.password = password
         self.email = email
         self.phone = phone
-        self.token = ""
 
     def SetPassword(self,newpwd):
         self.password = newpwd
