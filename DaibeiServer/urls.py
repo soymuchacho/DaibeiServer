@@ -15,11 +15,15 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from login import views as login_views
+from resourceManager import views as resource_views
 
 urlpatterns = [
-    url(r'^$',login_views.index,name='index'),
+    #url(r'^$',login_views.index,name='index'),
     url(r'^register$',login_views.Register,name='Register'),
     url(r'^advancelogin$',login_views.AdvanceLogin,name='advancelogin'),
-    url(r'^login$',login_views.Authentication),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^login$',login_views.Authentication,name='authentication'),
+    url(r'^download$',resource_views.Download_Resource,name='download'),
+	url(r'^admin/', include(admin.site.urls)),
+	url(r'^upload$',resource_views.Upload_Resource,name='upload'),
+	url(r'^uploadhtml$',resource_views.uploadhtml),
 ]

@@ -26,7 +26,7 @@ SECRET_KEY = 'qg0^jeww36dp$d-&lbm0j*%!ik4^7(qfps0ll12o_(zdd@)srr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['119.23.45.38']
 
 
 # Application definition
@@ -38,13 +38,14 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'login'
+    'login',
+    'resourceManager',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -123,7 +124,7 @@ LOGGING = {
     
         'null' : {                      
             'level' : 'DEBUG',
-            'class' : 'django.utils.log.NullHandler'
+            'class' : 'logging.NullHandler'
         },
 
         'console' : {                   

@@ -2,7 +2,7 @@
 from django.db import models
 
 class User_Info(models.Model):
-    # 用户名
+	# 用户名
     username = models.CharField(max_length=64)
     # 密码
     password = models.CharField(max_length=64)
@@ -18,3 +18,6 @@ class User_Info(models.Model):
     privtekey = models.CharField(max_length=1024)
     # 公钥
     publickey = models.CharField(max_length=1024)
+
+    def __str__(self):
+	return self.username

@@ -18,10 +18,17 @@ def RSADecrypt(crypto,privkey):
 
 # base64解密
 def Base64Decode(str):
-    return base64.decodestring(str)
+	try:
+		decode = base64.b64decode(str)
+	except:
+		return None
+	return decode
 
 # base64加密
 def Base64Encode(str):
-    return base64.encodestring(str)
-
+	try:
+		encode = base64.b64encode(str)
+	except:
+		return None
+	return encode
 
