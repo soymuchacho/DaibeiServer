@@ -13,8 +13,8 @@ class Resource(models.Model):
 	resource_path = models.CharField(max_length=256)
 	# 资源大小
 	resource_size = models.IntegerField()
-	# 资源类型 0 ：图片 1 ：视频 2 ：文字
-	resource_type = models.IntegerField()
+	# 资源类型 
+	resource_type = models.CharField(max_length=256)
 	# 资源描述
 	resource_describe = models.CharField(max_length=1024)
 
@@ -27,9 +27,15 @@ class ResourceList(models.Model):
 	# 资源id 
 	resource_id = models.CharField(max_length=256)
 	
+	def __unicode__(self):
+		return self.resource_id
+	
 class UserResourceList(models.Model):
 	# 所属user
 	username = models.CharField(max_length=256)
 	# list version
 	list_version = models.CharField(max_length=256)
+	
+	def __unicode__(self):
+		return self.username
 

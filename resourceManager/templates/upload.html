@@ -1,9 +1,17 @@
-<form enctype="multipart/form-data" action="/upload" method="post">  
+<form enctype="multipart/form-data" action="/upload" method="post" >  
+	<p>用户验证：<input type='Authentication' name='Authentication'></p>
+	<br/>  
 	<p>文件所属账号：<input type='user' name='user'></p>
 	<br/>  
 	<p>选择文件：<input type="file" name="file" /></p>
 	<br/>
 	<p>文件id：<input type='id' name='id'></p>
-	<br/>  
+	<br/> 
+	<p>文件大小：<input type='size' name='size'></p>
+	<br/>
+	<p>文件类型：<input type='type' name='type'></p>
+	<br/>
+	<p>文件描述:<input type='desc' name='desc'></p>
+	<br/>
 	<input type="submit" value="upload"/>  
 </form>

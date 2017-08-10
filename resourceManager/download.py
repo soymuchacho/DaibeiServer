@@ -1,8 +1,12 @@
-#coding:utf8
+#coding:utf-8
+import json
+import os
+from django.http import HttpResponse
 from django.http import StreamingHttpResponse
 from resourceManager.models import Resource
 from login.RsaUtil import *
 from base.logger import *
+from wsgiref.util import FileWrapper
 
 def ResourceDownLoad(resourceId):
 	log_write('info','resource download file id : %s',resourceId)
@@ -13,21 +17,33 @@ def ResourceDownLoad(resourceId):
 		log_write('info','%s没有这个资源',resourceId)
 		return None 
 	
-	filepath = dwfile.resource_path + '\\' + dwfile.resource_name
-	filename = dwfile.resource_name
-	log_write('info','找到文件资源：%s ,file id : %s, filepath: %s',filename,resourceId,filepath)
+	filepath = dwfile[0].resource_path.encode('utf8')
+	filename = dwfile[0].resource_name
+	#log_write('info','找到文件资源：%s ,file id : %s, filepath: %s',filename,resourceId,filepath)
+
+	wrapper = FileWrapper(file(filepath))
+	#def file_iterator(filepath,chunk_size=512):
+	#	try:
+	#		with open(filepath,'rb') as f:
+	#			while True:
+	#				c = f.read(chunk_size)
+	#				if c:
+	#					yield c
+	#				else:
+	#					break
+	#	except:
+	#		raise Http404
 	
-	def file_iterator(filepath,chunk_size=512):
-		with open(file_name,'rb') as f:
-			while True:
-				c = f.read(chunk_size)
-				if c:
-					yield c
-				else:
-					break
+	#response = StreamingHttpResponse(file_iterator(filepath))
+	response = HttpResponse(wrapper,content_type='text/plain')
+	response['Content-Length'] = os.path.getsize(filepath)
+	response['Content-Disposition']='attachment;filename={0}'.format(filename.encode('utf8'))	
+	dic_ret = {}
+	dic_ret['id'] = dwfile[0].resource_id
+	dic_ret['name'] = dwfile[0].resource_name
+	dic_ret['type'] = dwfile[0].resource_type
+	json_str = json.dumps(dic_ret)
 	
-	response = StreamingHttpResponse(file_iterator(filepath))
-	response['Content-Type'] = 'application/octet-stream'
-	response['Content-Disposition'] = 'attachment;filename="{0}"'.format(filename)
+	#response['content'] = json_str
 
 	return response 

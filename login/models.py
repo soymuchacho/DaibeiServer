@@ -20,4 +20,19 @@ class User_Info(models.Model):
     publickey = models.CharField(max_length=1024)
 
     def __str__(self):
-	return self.username
+		return self.username
+
+class Admin_Info(models.Model):
+	# 用户名
+	adminname = models.CharField(max_length=64)
+	# 密码
+	password = models.CharField(max_length=64)
+	# token
+	token = models.CharField(max_length=64)
+	# 私钥
+	privtekey = models.CharField(max_length=1024)
+	# 公钥
+	publickey = models.CharField(max_length=1024)
+
+	def __str__(self):
+		return self.adminname

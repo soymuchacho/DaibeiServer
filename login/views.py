@@ -25,41 +25,42 @@ def Register(request):
 		password = request.POST.get('password').encode('utf-8')
 		location = request.POST.get('location').encode('utf-8')
 		log_write('info','post数据 %s %s %s',username,password,location)
-		log_write('info','开始注册')	
-		# 进行解密	
-		username_decode = Base64Decode(username)
-		if username_decode == None:
-			log_write('info','用户名解密失败')	
-			return HttpResponse("{'error':'username decode error'}")
-		password_decode = Base64Decode(password)
-		if password_decode == None:
-			log_write('info','密码解密失败')	
-			return HttpResponse("{'error':'password decode error'}")
-		location_decode = Base64Decode(location)	
-		if location_decode == None:
-			log_write('info','地址解密失败')	
-			return HttpResponse("{'error':'location decode error'}")
-		log_write('info','解密完成')	
+		log_write('info','开始注册')
+		
+		# 进行解密 2017/8/10 全部采用明文，不需要解密	
+		#username_decode = Base64Decode(username)
+		#if username_decode == None:
+		#	log_write('info','用户名解密失败')	
+		#	return HttpResponse("{'error':'username decode error'}")
+		#password_decode = Base64Decode(password)
+		#if password_decode == None:
+		#	log_write('info','密码解密失败')	
+		#	return HttpResponse("{'error':'password decode error'}")
+		#location_decode = Base64Decode(location)	
+		#if location_decode == None:
+		#	log_write('info','地址解密失败')	
+		#	return HttpResponse("{'error':'location decode error'}")
+		#log_write('info','解密完成')	
 		log_write('info','用户开始注册 %s %s %s',username_decode,password_decode,location_decode)
 
 		# 生成token md5(base64(用户名+密钥+当前时间))
 		now_time = time.strftime("%Y-%02m-%02d %02H:%02M:%02S",time.localtime(time.time()))
-		encode_str = Base64Encode(username_decode+token_secretkey+now_time)
+		encode_str = Base64Encode(username+token_secretkey+now_time)
 		m2 = hashlib.md5()
 		m2.update(encode_str)
 		token = m2.hexdigest().encode('utf-8')
 		log_write('info','生成token %s ',token)
 
 		# 先查询数据库用户是否已经存在
-		old_user = User_Info.objects.filter(username=username_decode)
+		old_user = User_Info.objects.filter(username=username)
 		print old_user
 		print len(old_user)
 		if len(old_user) != 0:
-			log_write('info','用户%s已存在,注册失败',username_decode)
+			log_write('info','用户%s已存在,注册失败',username)
 			return HttpResponse("{'code' : '308', 'msg' : 'user exist'}")
 		log_write('info','用户不存在，可以注册')
 		# 用户不存在，创建
-		new_user = User_Info(username=username_decode,password=password_decode,token=token,location=location_decode)
+		new_user = User_Info(username=username,password=password,token=token,location=location)
 		if new_user == None:
 			return HttpResponse("{'error':'register error'}")
 		new_user.save()
@@ -68,7 +69,7 @@ def Register(request):
 	else:
 		return HttpResponse("{'error' : 'request post '}")
 
-# GET方式预登陆
+# GET方式预登陆 2017/8/10 因为采用https所以弃用
 def AdvanceLogin(request):
     if request.method == 'POST':
         # 返回公钥
@@ -107,23 +108,23 @@ def Authentication(request):
 		username = request.POST.get('username')
 		password = request.POST.get('password')
 
-		decode_username = Base64Decode(username)
-		decode_password = Base64Decode(password)
+		#decode_username = Base64Decode(username)
+		#decode_password = Base64Decode(password)
 
 		#获取私钥
-		privkey = cache.get(username)
+		#privkey = cache.get(username)
 
-		rsadecode_username = RSADecrypt(decode_username,privkey)
-		rsadecode_password = RSADecrypt(decode_password,privkey)
+		#rsadecode_username = RSADecrypt(decode_username,privkey)
+		#rsadecode_password = RSADecrypt(decode_password,privkey)
 
 		log_write('info','user Authenticationtion : %s %s',rsadecode_username,rsadecode_password)
 
 		# 检测帐号
-		user = User_Info.objects.filter(username=rsadecode_username)
+		user = User_Info.objects.filter(username=username)
 		if len(user) == 0:
 			return HttpResponse("{'error':'username or password error'}")
 		user.privtekey = privkey
-		if rsadecode_password == user.password:
+		if password == user.password:
 			result = "{'token':%s}" % user.token
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			cache.set(username,user,0)
@@ -133,3 +134,15 @@ def Authentication(request):
 			return HttpResponse("{'error':'username or password error'}")
 	else:
 		return HttpResponse("{'error':'badmethod'}") 
+
+
+
+# 管理员账号注册
+def AdminRegister(request):
+	return HttpResponse("{'error':'badmethod'}")
+
+
+
+# 管理员账号登陆验证
+def AdminLogin(request):
+	return HttpResponse("{'error':'badmethod'}")

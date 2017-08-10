@@ -1,3 +1,4 @@
+#coding=utf-8
 """DaibeiServer URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -19,11 +20,19 @@ from resourceManager import views as resource_views
 
 urlpatterns = [
     #url(r'^$',login_views.index,name='index'),
-    url(r'^register$',login_views.Register,name='Register'),
-    url(r'^advancelogin$',login_views.AdvanceLogin,name='advancelogin'),
+    # 用户账号操作
+	url(r'^register$',login_views.Register,name='Register'),
+    #url(r'^advancelogin$',login_views.AdvanceLogin,name='advancelogin'),
     url(r'^login$',login_views.Authentication,name='authentication'),
-    url(r'^download$',resource_views.Download_Resource,name='download'),
-	url(r'^admin/', include(admin.site.urls)),
+	url(r'^resourcelist$',resource_views.GetUserResourceList,name='getuserresourcelist'),
+	url(r'^resourcelist/version$',resource_views.GetUserResourceListVersion,name='getuserresourcelistversion'),
+    url(r'^resource/download$',resource_views.Download_Resource,name='download'),
+	# 管理员账号操作
+	url(r'^admin/register$',login_views.AdminRegister,name='AdminRegister'),
+	#url(r'^admin/advancelogin$',login_views.AdminAdvanceLogin,name='AdminAdvanceLogin'),
+	url(r'^admin/login$',login_views.AdminLogin,name='AdminLogin'),
 	url(r'^upload$',resource_views.Upload_Resource,name='upload'),
 	url(r'^uploadhtml$',resource_views.uploadhtml),
+	# 后台数据库管理	
+	url(r'^admin/', include(admin.site.urls)),
 ]
