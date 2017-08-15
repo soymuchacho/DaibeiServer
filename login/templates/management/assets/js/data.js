@@ -1,5 +1,4 @@
 window.onload = function(){
-	alert("onload");
 	$.ajax({
 		url:"https://119.23.45.38/admin/manager/new/getuserlist?page=1",
 		type:"GET",
@@ -8,7 +7,6 @@ window.onload = function(){
 			request.setRequestHeader("Authentication",oauth);
 		},
 		success:function(data){
-			alert(data);
 			var obj = eval("(" + data + ")");
 			if(obj.hasOwnProperty("users"))
 			{

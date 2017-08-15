@@ -150,11 +150,28 @@ def Delete_Resource(request):
 		user = CheckAdminToken(oauth)
 		if user == None:
 			return HttpResponse("{'error':'bad user'}")
+		resid = reqeust.POST.get('resourceid','unkown')
+		if resid == 'unkown':
+			return HttpResponse("{'error':'bad request'}")
+		DeleteResourceFromSQL(resid)
+		return HttpResponse("{'msg':'ok'}")
 	else:
 		return HttpResponse("{'error':'badmethod'}")
 
 
 # 设置用户资源列表
 def ResetUserResourceList(request):
-	return HttpResponse("{'error':'badmethod'}")
+	if reqeust.method == 'POST':	
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		# 进行认证
+		user = CheckAdminToken(oauth)
+		if user == None:
+			return HttpResponse("{'error':'bad user'}")
+		res_list = reqeust.POST.get('resourcelist','unkown')
+		json_list = json.dumps(res_list)
+
+		SetUserResourceList(json_list)
+		return HttpResponse("'msg':'ok'")
+	else:
+		return HttpResponse("{'error':'badmethod'}")
 
