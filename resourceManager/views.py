@@ -89,8 +89,8 @@ def Upload_Resource(request):
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
 		# 进行认证
 		user = CheckAdminToken(oauth)
-		#if user == None:
-		#	return HttpResponse("{'error':'bad user'}")
+		if user == None:
+			return HttpResponse("{'error':'bad user'}")
 		
 		fileid = request.POST.get('id',None)
 		if not fileid:
