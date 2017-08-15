@@ -1,66 +1,210 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
- <head>
-  <title> 资源文件结构</title>
-   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-       <link href="../assets/css/dpl-min.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/bui-min.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/page-min.css" rel="stylesheet" type="text/css" />   <!-- 下面的样式，仅是为了显示代码，而不应该在项目中使用-->
-   <link href="../assets/css/prettify.css" rel="stylesheet" type="text/css" />
-   <style type="text/css">
-    code {
-      padding: 0px 4px;
-      color: #d14;
-      background-color: #f7f7f9;
-      border: 1px solid #e1e1e8;
-    }
-   </style>
- </head>
- <body>
-  
-  <div class="container">
-    <div class="row">
-      <div class="span10">
-        <h2>简介</h2>
-        <p>整个站点的资源文件结构如右图所示：</p>
-        <ol>
-          <li><code>css</code>:包括使用到的所有的CSS文件，包括控件库和基础CSS文件，页面使用到的CSS文件。</li>
-          <li><code>img</code>:站点用到的图片文件，控件库的图片文件不在此处。</li>
-          <li><code>js</code>：目录下包含了一下文件：
-            <ol>
-              <li><code>jquery-1.8.1.min.js</code>：jquery文件</li>
-              <li><code>bui-min.js</code>:控件库文件</code></li>
-              <li><code>config.js</code>: <a href="">动态加载项目JS</a>的配置文件</li>
-            </ol>
-            还包含了2个文件夹：
-            <ol>
-              <li><code>common</code>:放置框架层次的JS文件和业务组件的JS文件。</li>
-              <li><code>module</code>:项目各个模块的JS文件</li>
-            </ol>
-          </li>
-        </ol>
-        <p>js目录下还包含了一个<code>prettify.js</code>,用于格式化代码，跟项目无关。</p>
-      </div>
-      <div class="span14">
-        <h3>示例图</h3>
-        <img src="../assets/img/resource.jpg" alt="文件结构">
-      </div>
-    </div>
-  </div>
-  <script type="text/javascript" src="../assets/js/jquery-1.8.1.min.js"></script>
-  <script type="text/javascript" src="../assets/js/bui-min.js"></script>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+    <!-- bootstrap -->
+    <link href="css/bootstrap/bootstrap.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-responsive.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
 
-  <script type="text/javascript" src="../assets/js/config-min.js"></script>
-  <script type="text/javascript">
-    BUI.use('common/page');
-  </script>
-  <!-- 仅仅为了显示代码使用，不要在项目中引入使用-->
-  <script type="text/javascript" src="../assets/js/prettify.js"></script>
-  <script type="text/javascript">
-    $(function () {
-      prettyPrint();
-    });
-  </script> 
+    <!-- global styles -->
+    <link rel="stylesheet" type="text/css" href="css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="css/elements.css" />
+    <link rel="stylesheet" type="text/css" href="css/icons.css" />
 
+    <!-- libraries -->
+    <link href="css/lib/font-awesome.css" type="text/css" rel="stylesheet" />
+    
+    <!-- this page specific styles -->
+    <link rel="stylesheet" href="css/compiled/tables.css" type="text/css" media="screen" />
+
+    <!-- open sans font -->
+    <link href='http://fonts.useso.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>
 <body>
-</html>  
+
+	<!-- main container -->
+    <div class="content">
+        
+        <div class="container-fluid">
+            <div id="pad-wrapper">
+                
+                <!-- products table-->
+                <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
+                <div class="table-wrapper products-table section">
+                    <div class="row-fluid head">
+                        <div class="span12">
+                            <h4>资源</h4>
+                        </div>
+                    </div>
+
+                    <div class="row-fluid filter-block">
+                        <div class="pull-right">
+                            <div class="ui-select">
+                                <select>
+                                  <option />资源ID
+                                  <option />资源名称
+								  <option />上传者
+                                </select>
+                            </div>
+                            <input type="text" class="search" />
+                            <a class="btn-flat success new-product">+ Add product</a>
+                        </div>
+                    </div>
+
+                    <div class="row-fluid">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="span3">
+                                        <input type="checkbox" />
+                                        资源名称
+                                    </th>
+                                    <th class="span3">
+                                        <span class="line"></span>资源名称
+                                    </th>
+                                    <th class="span3">
+                                        <span class="line"></span>上传者
+                                    </th>
+									<th class="span3">
+                                        <span class="line"></span>上传时间
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- row -->
+                                <tr class="first">
+                                    <td>
+                                        <input type="checkbox" />
+                                        <div class="img">
+                                            <img src="img/table-img.png" />
+                                        </div>
+                                        <a href="#" class="name">1000001 </a>
+                                    </td>
+                                    <td class="description">
+                                        text.txt
+                                    </td>
+									</td>
+                                    <td class="description">
+                                        lankam
+                                    </td>
+                                    <td>
+                                        2017-7-25 12:22:32
+                                        <ul class="actions">
+                                            <span class="label label-success"><li class="last">删除</li></span>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <!-- row -->
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" />
+                                        <div class="img">
+                                            <img src="img/table-img.png" />
+                                        </div>
+                                        <a href="#" class="name">1000001 </a>
+                                    </td>
+                                    <td class="description">
+                                        text.txt
+                                    </td>
+									</td>
+                                    <td class="description">
+                                        lankam
+                                    </td>
+                                    <td>
+                                        2017-7-25 12:22:32
+                                        <ul class="actions">
+                                            <span class="label label-success"><li class="last">删除</li></span>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <!-- row -->
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" />
+                                        <div class="img">
+                                            <img src="img/table-img.png" />
+                                        </div>
+                                        <a href="#" class="name">1000001 </a>
+                                    </td>
+                                    <td class="description">
+                                        text.txt
+                                    </td>
+									</td>
+                                    <td class="description">
+                                        lankam
+                                    </td>
+                                    <td>
+                                        2017-7-25 12:22:32
+                                        <ul class="actions">
+                                            <span class="label label-success"><li class="last">删除</li></span>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <!-- row -->
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" />
+                                        <div class="img">
+                                            <img src="img/table-img.png" />
+                                        </div>
+                                        <a href="#" class="name">1000001 </a>
+                                    </td>
+                                    <td class="description">
+                                        text.txt
+                                    </td>
+									</td>
+                                    <td class="description">
+                                        lankam
+                                    </td>
+                                    <td>
+                                        2017-7-25 12:22:32
+                                        <ul class="actions">
+                                            <span class="label label-success"><li class="last">删除</li></span>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" />
+                                        <div class="img">
+                                            <img src="img/table-img.png" />
+                                        </div>
+                                        <a href="#" class="name">1000001 </a>
+                                    </td>
+                                    <td class="description">
+                                        text.txt
+                                    </td>
+									</td>
+                                    <td class="description">
+                                        lankam
+                                    </td>
+                                    <td>
+                                        2017-7-25 12:22:32
+                                        <ul class="actions">
+                                            <span class="label label-success"><li class="last">删除</li></span>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- end products table -->
+            </div>
+        </div>
+    </div>
+    <!-- end main container -->
+
+	<!-- scripts -->
+    <script src="js/jquery-latest.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/theme.js"></script>
+
+</body>
+</html>
