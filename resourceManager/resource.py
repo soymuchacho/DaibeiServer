@@ -68,20 +68,18 @@ def GetResourceList(user):
 		result = json.dumps(ret_dict)
 		return result
 	
-	
-	index = 1
+	ret_dict['resource'] = [] 
 	for resource in res_list:
-		key = "resource%d" % index
-		ret_dict[key] = {} 
-		ret_dict[key]['id'] = resource.resource_id
+		node_dict = {}	
+		node_dict['id'] = resource.resource_id
 		# 根据id查找资源信息
 		res = Resource.objects.filter(resource_id=resource.resource_id)
 		if len(res) != 0:
-			ret_dict[key]['name'] = res[0].resource_name
-			ret_dict[key]['type'] = res[0].resource_type
-			ret_dict[key]['size'] = res[0].resource_size
-			ret_dict[key]['describe'] = res[0].resource_describe
-		index = index + 1
+			node_dict['name'] = res[0].resource_name
+			node_dict['type'] = res[0].resource_type
+			node_dict['size'] = res[0].resource_size
+			node_dict['describe'] = res[0].resource_describe
+		ret_dict['resource'].append(node_dict)
 
 	result = json.dumps(ret_dict)
 	log_write('info','get user resource list result : %s',result)

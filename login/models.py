@@ -12,12 +12,6 @@ class User_Info(models.Model):
     manager = models.CharField(max_length=64)
     # 开始使用时间
     use_time = models.CharField(max_length=64)
-    # Token
-    token = models.CharField(max_length=64)
-    # 私钥
-    privtekey = models.CharField(max_length=1024)
-    # 公钥
-    publickey = models.CharField(max_length=1024)
 
     def __str__(self):
 		return self.username
@@ -27,12 +21,6 @@ class Admin_Info(models.Model):
 	adminname = models.CharField(max_length=64)
 	# 密码
 	password = models.CharField(max_length=64)
-	# token
-	token = models.CharField(max_length=64)
-	# 私钥
-	privtekey = models.CharField(max_length=1024)
-	# 公钥
-	publickey = models.CharField(max_length=1024)
 
 	def __str__(self):
 		return self.adminname

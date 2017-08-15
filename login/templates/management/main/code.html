@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>   
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+    <!-- bootstrap -->
+    <link href="css/bootstrap/bootstrap.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-responsive.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
+
+    <!-- global styles -->
+    <link rel="stylesheet" type="text/css" href="css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="css/elements.css" />
+    <link rel="stylesheet" type="text/css" href="css/icons.css" />
+
+    <!-- libraries -->
+    <link href="css/lib/font-awesome.css" type="text/css" rel="stylesheet" />
+    
+    <!-- this page specific styles -->
+    <link rel="stylesheet" href="css/compiled/user-list.css" type="text/css" media="screen" />
+
+
+	<!-- scripts -->
+    <script src="/static/management/main/js/jquery-latest.js"></script>
+    <script src="/static/management/main/js/bootstrap.min.js"></script>
+	<script src="/static/management/assets/js/wwwlankamcom.js"></script>
+    <script src="/static/management/main/js/theme.js"></script>
+	<script src="/static/management/main/js/data.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+	<!-- main container -->
+    <div class="content">       
+        <div class="container-fluid">
+            <div id="pad-wrapper" class="users-list">
+                <div class="row-fluid header">
+                    <div class="span10 pull-right">
+                        <input type="text" class="span5 search" placeholder="输入机器名称" />
+                        
+                        <!-- custom popup filter -->
+                        <!-- styles are located in css/elements.css -->
+                        <!-- script that enables this dropdown is located in js/theme.js -->
+                        <div class="ui-dropdown">
+                            <div class="head" data-toggle="tooltip" title="点我查找">
+                                查找机器
+                            </div>  
+                        </div>
+
+                        <a href="new-user.html" class="btn-flat success pull-right">
+                            <span>&#43;</span>
+                            新增机器
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Users table -->
+                <div class="row-fluid table">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="span4 sortable">
+                                    机器名称
+                                </th>
+                                <th class="span3 sortable">
+                                    <span class="line"></span>机器注册时间
+                                </th>
+                                <th class="span2 sortable">
+                                    <span class="line"></span>机器位置
+                                </th>
+								<th class="span2 sortable">
+                                    <span class="line"></span>资源列表版本
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="userlist">
+						</tbody>
+                    </table>
+                </div>
+                <!-- end users table -->
+				<div class="pagination pull-right">
+					<ul id="userpage">
+					</ul>
+				</div>
+            </div>
+        </div>
+    </div>
+    <!-- end main container -->
+</body>
+</html>

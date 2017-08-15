@@ -28,11 +28,14 @@ urlpatterns = [
 	url(r'^resourcelist/version$',resource_views.GetUserResourceListVersion,name='getuserresourcelistversion'),
     url(r'^resource/download$',resource_views.Download_Resource,name='download'),
 	# 管理员账号操作
+	url(r'^admin$',login_views.AdminLogin,name='adminlogin'),
 	url(r'^admin/register$',login_views.AdminRegister,name='AdminRegister'),
 	#url(r'^admin/advancelogin$',login_views.AdminAdvanceLogin,name='AdminAdvanceLogin'),
-	url(r'^admin/login$',login_views.AdminLogin,name='AdminLogin'),
+	url(r'^admin/authentication$',login_views.AdminAuthentication,name='AdminAuthentication'),
+	url(r'^admin/manager$',login_views.EnterManager,name='EnterManager'),
+	url(r'^admin/manager/new/getuserlist$',login_views.GetAllUserList,name='GetAllUserList'),
 	url(r'^upload$',resource_views.Upload_Resource,name='upload'),
 	url(r'^uploadhtml$',resource_views.uploadhtml),
 	# 后台数据库管理	
-	url(r'^admin/', include(admin.site.urls)),
+	url(r'^superadmin/', include(admin.site.urls)),
 ]
