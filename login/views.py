@@ -76,7 +76,7 @@ def Authentication(request):
 
 			log_write('info','生成token : %s',result)
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
-			cache.set(token,username,ACCOUNT_LOGIN_DEFAULT_TIME)
+			cache.set(result,username,ACCOUNT_LOGIN_DEFAULT_TIME)
 			
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)

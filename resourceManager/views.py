@@ -87,6 +87,7 @@ def uploadhtml(request):
 def Upload_Resource(request):
 	if request.method == 'POST':
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		log_write('info','upload resource token %s',oauth)
 		# 进行认证
 		user = CheckAdminToken(oauth)
 		if user == None:

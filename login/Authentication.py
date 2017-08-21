@@ -26,12 +26,12 @@ def RegisterUser(username,password,location):
 	# 先查询数据库用户是否已经存在
 	old_user = User_Info.objects.filter(username=username)
 	if len(old_user) != 0:
-		log_write('info','用户%s已存在,注册失败',username)
+		#log_write('info','用户%s已存在,注册失败',username)
 		return False
 
 	old_admin = Admin_Info.objects.filter(adminname=username)
 	if len(old_admin) != 0:
-		log_write('info','用户%s已存在,注册失败',username)
+		#log_write('info','用户%s已存在,注册失败',username)
 		return False
 	log_write('info','用户不存在，可以注册')
 	
@@ -48,12 +48,12 @@ def RegisterAdmin(username,password):
 	# 先查询数据库用户是否已经存在
 	old_user = User_Info.objects.filter(username=username)
 	if len(old_user) != 0:
-		log_write('info','用户%s已存在,注册失败',username)
+		#log_write('info','用户%s已存在,注册失败',username)
 		return False
 
 	old_admin = Admin_Info.objects.filter(adminname=username)
 	if len(old_admin) != 0:
-		log_write('info','用户%s已存在,注册失败',username)
+		#log_write('info','用户%s已存在,注册失败',username)
 		return False
 	log_write('info','用户不存在，可以注册')
 	
@@ -71,14 +71,14 @@ def CheckUserToken(token):
 	username = cache.get(token)
 	if username == None:
 		log_write('info','username is None')
-		log_write('info','check token %s failed!',token)
+		#log_write('info','check token %s failed!',token)
 		return None
 
 	# 缓存中不存在...从数据库中查找
 	user = User_Info.objects.filter(username=username)
 	if len(user) == 0:
 		#数据库中也不存在，返回None
-		log_write('info','check token %s failed!',token)
+		#log_write('info','check token %s failed!',token)
 		return None
 	user = user[0]
 	log_write('info','check token %s successful! username %s',token,user.username)
@@ -90,18 +90,18 @@ def CheckAdminToken(token):
 	adminname = cache.get(token)
 	if adminname == None:
 		# 缓存中不存在，从数据库中查找
-		log_write('info','check admin token %s failed!',token)
+		#log_write('info','check admin token %s failed!',token)
 		return None
 	
 	admin = Admin_Info.objects.filter(adminname=adminname)
 	if len(admin) == 0:
 		# 数据库中不存在，返回None
-		log_write('info','check admin token %s failed!',token)
+		#log_write('info','check admin token %s failed!',token)
 		return None
 	# 保存到缓存中
 	admin = admin[0]
 
-	log_write('info','check admin token %s successful! adminname %s',token,admin.adminname)
+	#log_write('info','check admin token %s successful! adminname %s',token,admin.adminname)
 	return admin
 
 

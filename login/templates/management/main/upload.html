@@ -7,6 +7,7 @@
     <link href="/static/management/assets/css/bui-min.css" rel="stylesheet" type="text/css" />
     <link href="/static/management/assets/css/page-min.css" rel="stylesheet" type="text/css" />   <!-- 下面的样式，仅是为了显示代码，而不应该在项目中使用-->
    <link href="/static/management/assets/css/prettify.css" rel="stylesheet" type="text/css" />
+   <link href="/static/management/assets/css/upload.css" rel="stylesheet" type="text/css" />
    <style type="text/css">
     code {
       padding: 0px 4px;
@@ -20,10 +21,10 @@
   
   <div class="container">
     <div class="row">    
-		<form id="J_Form" class="form-horizontal" data-depends="{'#btn:click':['toggle'],'#btn3:click':['clearFields']}">
+		<form class="form-horizontal" method="post" enctype="multipart/form-data" id="uploadForm">
 		  <div class="row">
 			<div class="control-group span8">
-			  <label class="control-label"><s>*</s>文件id：</label>
+			  <label class="control-label"><s>*</s>文件编号：</label>
 			  <div class="controls">
 				<input name="id" type="text" data-rules="{required:true}" class="input-normal control-text">
 			  </div>
@@ -32,10 +33,31 @@
 			  <label class="control-label"><s>*</s>文件类型：</label>
 			  <div class="controls">
 				<select  data-rules="{required:true}"  name="type" class="input-normal"> 
-				  <label class="control-label"><s>*</s>选择文件：</label>
-				  <input type="file" name="file" /></p>
+					<option value="">请选择</option>
+		            <option value="图片">picture</option>
+					<option value="视频">video</option>
 				</select>
 			  </div>
+			</div>
+		  </div>
+		  <div class="row">
+			<div class="control-group span15">
+			  <label class="control-label"><s>*</s>上传文件：</label>
+			  <div class="controls control-row4">
+				  <input type="file" name="file" id="fileInput" onchange="getFilesize()" /></p>
+				  <div class="progress">
+					<div class="bar"></div>
+					<div class="percent"></div>
+				  </div>
+			  </div>
+			</div>
+		  </div>
+		  <div class="row">
+			<div class="control-group span15">
+				<label class="control-label"><s>*</s>文件大小：</label>
+				<div class="controls control-row4">
+					<input type="text" name="size" id="size" readonly="readonly"/></p>
+				</div>
 			</div>
 		  </div>
 		  <div class="row">
@@ -48,37 +70,20 @@
 		  </div>
 		  <div class="row">
 			<div class="control-group span15">
-				<input type="submit" value="upload"/>
+				<input type="submit" value="上传" id="upload"/>
+				<input type="reset" value="重置" id="reset"/>
 			</div>
 		  </div>
 		</form> 
     </div>
-    
-
   </div>
   <script type="text/javascript" src="/static/management/assets/js/jquery-1.8.1.min.js"></script>
+  <script type="text/javascript" src="/static/management/assets/js/jquery.form.js"></script>
   <script type="text/javascript" src="/static/management/assets/js/bui-min.js"></script>
-
+  <script type="text/javascript" src="/static/management/assets/js/upload.js"></script>
+  <script type="text/javascript" src="/static/management/assets/js/wwwlankamcom.js"></script>
   <script type="text/javascript" src="/static/management/assets/js/config-min.js"></script>
-  <script type="text/javascript">
-    BUI.use('common/page');
-  </script>
   <!-- 仅仅为了显示代码使用，不要在项目中引入使用-->
   <script type="text/javascript" src="/static/management/assets/js/prettify.js"></script>
-  <script type="text/javascript">
-    $(function () {
-      prettyPrint();
-    });
-  </script> 
-<script type="text/javascript">
-  BUI.use('bui/form',function (Form) {
-    var form = new Form.HForm({
-      srcNode : '#J_Form'
-    });
-
-    form.render();
-  });
-</script>
-
 <body>
 </html> 

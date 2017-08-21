@@ -88,8 +88,8 @@ def GetResourceList(user):
 # 设置用户资源列表
 def SetUserResourceList(list_json):
 	username = list_json['username']
-	for item in list_json['resource']
-		ResourceList.objects.create(username=username,item['id'])
+	#for key,item in enumerate(list_json['resource']):
+	#	ResourceList.objects.create(username=username,item[key]['id'])
 	return True
 
 # 删除数据库中的资源

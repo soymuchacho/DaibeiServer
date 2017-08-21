@@ -16,7 +16,7 @@ window.onload = function(){
 					html += '<tr><td><img src="img/contact-img.png" class="img-circle avatar hidden-phone"/>' 
 						+ '<a href="user-profile.html" class="name">' + obj.users[key].username + '</a><span class="subtext">使用中</span>'
 						+ '</td><td>' + obj.users[key].date + '</td><td>' + obj.users[key].location + '</td><td>' 
-						+ obj.users[key].version + '</td></tr>';
+						+ obj.users[key].version + '</td><td><button>删除</button><button>修改</button><button>设置资源</button></td></tr>';
 				}
 				$('#userlist').append(html);
 			}
@@ -64,4 +64,6 @@ function getuserlistpage(page)
 		}
 	});
 }
+
+
 
