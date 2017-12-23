@@ -1,4 +1,4 @@
-#conding=utf-8
+#coding=utf-8
 """
 Django settings for DaibeiServer project.
 
@@ -136,7 +136,8 @@ LOGGING = {
             'level' : 'DEBUG',
             'class' : 'logging.handlers.RotatingFileHandler',
             'filename' : '/root/log/DaibeiDebug.log',
-            'formatter' : 'verbose',
+			'maxBytes':1024 * 1024 * 5,
+			'formatter' : 'verbose',
         },
 
         'mail_admins' : {                   
@@ -172,9 +173,9 @@ LOGGING = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 

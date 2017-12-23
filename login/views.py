@@ -12,6 +12,7 @@ import json
 import time
 import hashlib
 import datetime
+import sys
 from login.models import User_Info
 from login.models import Admin_Info
 from login.sql import *
@@ -74,7 +75,8 @@ def Authentication(request):
 			result = GenerateToken(user[0].username,token_secretkey)
 			ret_dict['token'] = result
 
-			log_write('info','生成token : %s',result)
+			log_write('info','生成token : ')
+			log_write('info',result)
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			cache.set(result,username,ACCOUNT_LOGIN_DEFAULT_TIME)
 			
@@ -136,7 +138,8 @@ def AdminAuthentication(request):
 		if password == adminuser[0].password:
 			result = {}
 			token = GenerateToken(adminname,token_secretkey)
-			log_write('info','generatetoken %s',token)
+			log_write('info','generatetoken')
+			log_write('info',token)
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			cache.set(token,adminname,ACCOUNT_LOGIN_DEFAULT_TIME)
 			
@@ -205,10 +208,12 @@ def GetAllUserList(request):
 				date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 				node['date'] = user.use_time 
 				ret_dict['users'].append(node)
-				log_write('info','username %s location %s version %s date %s',user.username,
-						user.location,version,date)
+				log_write('info',user.username)
+				log_write('info',user.location)
+				log_write('info',version)
+				log_write('info',date)
 			ret_json = json.dumps(ret_dict)
-			log_write('info','ressult : %s',ret_json)
+			log_write('info',ret_json)
 			return HttpResponse(ret_json)		
 		log_write('info','no userlist')	
 		return HttpResponse("{}")

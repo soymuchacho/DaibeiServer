@@ -34,6 +34,8 @@ urlpatterns = [
 	url(r'^admin/authentication$',login_views.AdminAuthentication,name='AdminAuthentication'),
 	url(r'^admin/manager$',login_views.EnterManager,name='EnterManager'),
 	url(r'^admin/manager/new/getuserlist$',login_views.GetAllUserList,name='GetAllUserList'),
+	url(r'^admin/manager/new/getresourcelist$',resource_views.GetAllResource,name='GetAllResource'),
+	url(r'^admin/manager/delete/resource$',resource_views.Delete_Resource,name='DeleteResource'),
 	url(r'^upload$',resource_views.Upload_Resource,name='upload'),
 	url(r'^uploadhtml$',resource_views.uploadhtml),
 	# 后台数据库管理	

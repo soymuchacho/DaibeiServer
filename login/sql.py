@@ -5,7 +5,7 @@ import hashlib
 from login.models import User_Info
 from login.models import Admin_Info
 
-PAGE_DEFAULT_NUMBER = 10
+PAGE_DEFAULT_NUMBER = 8 
 
 def GetAllUserListPageCount():
 	total = GetAllUserListNum();

@@ -13,8 +13,8 @@ window.onload = function(){
 				var html = '';
 				for(key in obj.users)
 				{
-					html += '<tr><td><img src="img/contact-img.png" class="img-circle avatar hidden-phone"/>' 
-						+ '<a href="user-profile.html" class="name">' + obj.users[key].username + '</a><span class="subtext">使用中</span>'
+					html += '<tr><td><img src="/static/management/assets/img/contact-img.png" class="img-circle avatar hidden-phone"/>' 
+						+ '<a href="#" class="name">' + obj.users[key].username + '</a><span class="subtext">使用中</span>'
 						+ '</td><td>' + obj.users[key].date + '</td><td>' + obj.users[key].location + '</td><td>' 
 						+ obj.users[key].version + '</td><td><button>删除</button><button>修改</button><button>设置资源</button></td></tr>';
 				}
@@ -53,10 +53,10 @@ function getuserlistpage(page)
 				var html = '';
 				for(key in obj.users)
 				{
-					html += '<tr><td><img src="img/contact-img.png" class="img-circle avatar hidden-phone"/>' 
+					html += '<tr><td><img src="/static/management/assets/img/contact-img.png" class="img-circle avatar hidden-phone"/>' 
 						+ '<a href="user-profile.html" class="name">' + obj.users[key].username + '</a><span class="subtext">使用中</span>'
 						+ '</td><td>' + obj.users[key].date + '</td><td>' + obj.users[key].location + '</td><td>' 
-						+ obj.users[key].version + '</td></tr>';
+						+ obj.users[key].version + '</td><td><button>删除</button><button>修改</button><button>设置资源</button></td></tr>';
 				}
 				$('#userlist').empty();
 				$('#userlist').append(html);

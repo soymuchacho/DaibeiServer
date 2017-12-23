@@ -19,7 +19,8 @@ def GenerateToken(username,token_secretkey):
 	m2 = hashlib.md5()
 	m2.update(encode_str)
 	token = m2.hexdigest().encode('utf-8')
-	log_write('info','生成token %s ',token)
+	log_write('info','生成token')
+	log_write('info',token)
 	return token
 
 def RegisterUser(username,password,location):
@@ -67,7 +68,8 @@ def RegisterAdmin(username,password):
 
 # 验证token并返回username
 def CheckUserToken(token):
-	log_write('info','check token %s',token)
+	log_write('info','check token')
+	log_write('info',token)
 	username = cache.get(token)
 	if username == None:
 		log_write('info','username is None')
@@ -81,12 +83,12 @@ def CheckUserToken(token):
 		#log_write('info','check token %s failed!',token)
 		return None
 	user = user[0]
-	log_write('info','check token %s successful! username %s',token,user.username)
 	return user
 
 # 验证管理员账号token并返回adminname
 def CheckAdminToken(token):
-	log_write('info','check admin token %s',token)
+	log_write('info','check admin token ')
+	log_write('info',token)
 	adminname = cache.get(token)
 	if adminname == None:
 		# 缓存中不存在，从数据库中查找
@@ -96,12 +98,12 @@ def CheckAdminToken(token):
 	admin = Admin_Info.objects.filter(adminname=adminname)
 	if len(admin) == 0:
 		# 数据库中不存在，返回None
-		#log_write('info','check admin token %s failed!',token)
+		log_write('info','check admin token failed!')
 		return None
 	# 保存到缓存中
 	admin = admin[0]
 
-	#log_write('info','check admin token %s successful! adminname %s',token,admin.adminname)
+	log_write('info','check admin token successful! ')
 	return admin
 
 

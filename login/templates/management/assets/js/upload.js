@@ -1,35 +1,43 @@
 // 上传资源
 $('#upload').click(function(){
 	var formData = new FormData($('#uploadForm')[0]);
-	var bar = $('.bar');
-	var percent = $('.percent');
 	$.ajax({
+		xhr: function(){
+			var xhr = new window.XMLHttpRequest();
+			xhr.upload.addEventListener("progress", function(evt){
+				if (evt.lengthComputable) {
+					var percentComplete = (evt.loaded / evt.total) * 100;
+					//Do something with upload progress
+				
+					console.log(percentComplete);
+					$("#percent").html(parseInt(percentComplete) + '%')  
+				    $("#progressNumber").css("width",""+percentComplete+"px");
+				}
+			}, false);
+			//Download progress
+			xhr.addEventListener("progress", function(evt){
+				if (evt.lengthComputable) {
+					var percentComplete = evt.loaded / evt.total;
+					//Do something with download progress
+					console.log(percentComplete);
+				
+				}
+			}, false);
+			return xhr;
+		},
 		url:'https://119.23.45.38/upload',
 		type:'POST',
-		dataType:'text',
 		data:formData,
+		cache:false,
+		contentType:false,
+		processData:false,
 		beforeSend:function(request){
 			var token = getCookie('token');
 			request.setRequestHeader('Authentication',token)
-			var percentVal = '0%';
-			bar.width(percentVal);
-			percent.html(percentVal);
-		},
-		xhr:function(){
-			// 绑定progress事件的回调函数
-			myXhr = $.ajaxSetting.xhr();
-			// 检查upload属性是否存在
-			if(myXhr.upload)
-			{
-				myXhr.upload.addEventListener('progress',progressHandingFunction,false);	
-			}
-			return myXhr;
+			request.setRequestHeader('charset','utf-8')
 		},
 		success:function(returndata){
-			alert(returndata)
-			var percentVal = '100%';
-			bar.width=(percentVal);
-			percent.html(percentVal);
+			alert("上传完成");
 		},
 		error:function(){
 			alert("表单提交异常!");
@@ -37,15 +45,6 @@ $('#upload').click(function(){
 	});
 	return false;
 });
-
-// 上传进度回调函数
-function progressHandingFunction(e) {
-	if(e.lengthComputable){
-		var percentVal = e.loaded/e.total*100;
-		bar.width(percentVal);
-		percent.html(percentVal + '%');
-	}
-}
 
 // 获取文件大小
 function getFilesize(){

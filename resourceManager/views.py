@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#coding=utf-8 
 from __future__ import unicode_literals
 from resourceManager.models import *
 from django.shortcuts import render
@@ -11,6 +11,7 @@ import os
 from login.Authentication import * 
 from .resource import *
 
+
 ####################################################################################
 #																				   #
 #							用户账号操作										   #
@@ -21,7 +22,6 @@ from .resource import *
 def GetUserResourceListVersion(request):
 	if request.method == 'GET':
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
-		log_write('info','get user resource list version oauth %s',oauth)
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
@@ -29,7 +29,7 @@ def GetUserResourceListVersion(request):
 
 		result = GetResourceListVersion(user)
 		if result == None:
-			return HttpResponse("{'error' : 'get version error'}")
+			return HttpResponse("{'error' : 'no version'}")
 		
 		return HttpResponse(result)
 	else:
@@ -55,19 +55,19 @@ def GetUserResourceList(request):
 
 # 资源下载
 def Download_Resource(request):
-	if request.method == 'GET':
-		#oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
 		# 进行认证
-		#user = CheckUserToken(oauth)
-		#if user == None:
-		#	return HttpResponse("{'error':'bad user'}")
+		user = CheckUserToken(oauth)
+		if user == None:
+			return HttpResponse("{'error':'bad user'}")
 
-		fileid = request.GET.get('fileid')
+		fileid = request.POST.get('fileid')
 		print request.POST
-		log_write('info','download file id %s',fileid)
+		#log_write('info','download file id %s',fileid)
 		response = ResourceDownLoad(fileid)
 		if response == None:
-			return HttpResponse("{'error':'bad fileid'}")
+			return HttpResponse("{'error':'file is not exists'}")
 		
 		return response
 	else:
@@ -83,22 +83,53 @@ def Download_Resource(request):
 def uploadhtml(request):
 	return render(request,'upload.html')
 
+# 获取全部资源
+def GetAllResource(request):
+	if request.method == 'GET':
+		log_write('info','获取全部资源')
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{'error':'bad user'}")
+		
+		page = int(request.GET.get('page',0))
+		if page == 0:
+			return HttpResponse("{'error','page error'}")
+		
+		ret_dict = {}
+		reslist = GetAllResourceFromSQL(page)
+		if reslist != None:
+			ret_dict['pages'] = GetAllResourcePageCount()
+			ret_dict['resources'] = []
+			for res in reslist:
+				node = {}
+				node['id'] = res.resource_id
+				node['name'] = res.resource_name
+				node['size'] = str(res.resource_size)
+				node['type'] = res.resource_type
+				node['desc'] = res.resource_describe
+				node['date'] = res.resource_date
+				ret_dict['resources'].append(node)
+			ret_json = json.dumps(ret_dict)
+			return HttpResponse(ret_json)
+		else:
+			return HttpResponse("{}")
+	else:
+		return HttpResponse("{'error':'bad method'}")
 # 资源上传
 def Upload_Resource(request):
 	if request.method == 'POST':
+		log_write('info','upload resource')
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
-		log_write('info','upload resource token %s',oauth)
 		# 进行认证
 		user = CheckAdminToken(oauth)
 		if user == None:
 			return HttpResponse("{'error':'bad user'}")
 		
-		fileid = request.POST.get('id',None)
-		if not fileid:
-			return HttpResponse("{'error' : 'no files id'}")
-		
 		uploadSize = request.POST.get('size',None)				# 上传文件的大小
-		if not uploadSize:
+		strs = 'uploadSize %s' % uploadSize
+		log_write('info',strs)
+		if uploadSize == None:
 			return HttpResponse("{'error' : 'no files size'}")
 		
 		restype = request.POST.get('type',None)				# 上传文件的类型
@@ -113,9 +144,13 @@ def Upload_Resource(request):
 		if not uploadFile:
 			return HttpResponse("{'error' : 'no files for upload'}")
 		
-		log_write('info','upload file : %s %s %s',uploadFile.name,user,fileid)	
-	
-		filepath = os.path.join("/root/Resource",uploadFile.name)
+		# 检查资源名是否重名
+		finalname = CheckResName(uploadFile.name)
+		# 自动生成id
+		fileid = GenerateResId(finalname)
+
+		filepath = os.path.join("/root/Resource",finalname).encode("utf-8")
+		log_write('info',filepath)
 		dest = open(filepath,'wb+')
 		# 文件大于2.5M时，分片读取，否则直接读取
 		if uploadFile.multiple_chunks() == False:
@@ -127,7 +162,7 @@ def Upload_Resource(request):
 		dest.close()
 
 		totalsize = os.path.getsize(filepath)
-		log_write('info','upload size %s,total size %d',uploadSize,totalsize)
+		#log_write('info','upload size %s,total size %d',uploadSize,totalsize)
 		
 		if totalsize != long(uploadSize):
 			# 将现有的文件删除
@@ -135,9 +170,8 @@ def Upload_Resource(request):
 			return HttpResponse("{'error' : 'upload file failed,not all size'}")
 		
 		# 将上传的文件信息保存在数据库中
-		SaveResourceToSQL(fileid,uploadFile.name,filepath,uploadSize,restype,resdesc)	
+		SaveResourceToSQL(fileid,finalname,filepath,uploadSize,restype,resdesc)	
 		
-		log_write('info','upload file : %s successful!!',uploadFile.name)	
 		return HttpResponse("{'msg':'upload ok'}")
 	else:
 		return HttpResponse("{'error':'badmethod'}")
@@ -151,10 +185,14 @@ def Delete_Resource(request):
 		user = CheckAdminToken(oauth)
 		if user == None:
 			return HttpResponse("{'error':'bad user'}")
-		resid = reqeust.POST.get('resourceid','unkown')
+		resid = request.POST.get('resourceid','unkown')
 		if resid == 'unkown':
 			return HttpResponse("{'error':'bad request'}")
-		DeleteResourceFromSQL(resid)
+		strd = '要删除的资源id %s' % resid
+		log_write('info',strd)
+		bRet = DeleteResourceFromSQL(resid)
+		if bRet == False:
+			return HttpResponse("{'error':'remove error'}")
 		return HttpResponse("{'msg':'ok'}")
 	else:
 		return HttpResponse("{'error':'badmethod'}")

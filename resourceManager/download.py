@@ -9,17 +9,21 @@ from base.logger import *
 from wsgiref.util import FileWrapper
 
 def ResourceDownLoad(resourceId):
-	log_write('info','resource download file id : %s',resourceId)
+	#log_write('info','resource download file id : %s',resourceId)
 	
 	# 从数据库中查找该文件
 	dwfile = Resource.objects.filter(resource_id=resourceId)
 	if len(dwfile) == 0:
-		log_write('info','%s没有这个资源',resourceId)
+		log_write('info',resourceId)
+		log_write('info','没有这个资源')
 		return None 
 	
-	filepath = dwfile[0].resource_path.encode('utf8')
+	filepath = dwfile[0].resource_path.encode('utf-8')
 	filename = dwfile[0].resource_name
 	#log_write('info','找到文件资源：%s ,file id : %s, filepath: %s',filename,resourceId,filepath)
+
+	if os.path.exists(filepath) == False:
+		return None
 
 	wrapper = FileWrapper(file(filepath))
 	#def file_iterator(filepath,chunk_size=512):

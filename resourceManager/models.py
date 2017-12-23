@@ -16,7 +16,9 @@ class Resource(models.Model):
 	# 资源类型 
 	resource_type = models.CharField(max_length=256)
 	# 资源描述
-	resource_describe = models.CharField(max_length=1024)
+	resource_describe = models.CharField(max_length=1024,null=True)
+	# 上传时间
+	resource_date = models.CharField(max_length=256,null=True)
 
 	def __unicode__(self):
 		return self.resource_id
