@@ -18,6 +18,7 @@ from login.models import Admin_Info
 from login.sql import *
 from .Authentication import *
 from resourceManager.models import *
+from dwebsocket import require_websocket 
 
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
@@ -218,4 +219,9 @@ def GetAllUserList(request):
 		log_write('info','no userlist')	
 		return HttpResponse("{}")
 
+
+@require_websocket
+def WebSocketConnect(request):
+	message = request.websocket.wait()
+	request.websocket.send(message)	
 

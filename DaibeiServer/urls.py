@@ -40,4 +40,6 @@ urlpatterns = [
 	url(r'^uploadhtml$',resource_views.uploadhtml),
 	# 后台数据库管理	
 	url(r'^superadmin/', include(admin.site.urls)),
+	# WebSocket
+	url(r'^websocket/connect$', login_views.WebSocketConnect, name='WebSocketConnect')
 ]

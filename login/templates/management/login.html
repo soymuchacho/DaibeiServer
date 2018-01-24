@@ -1,39 +1,31 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
-<title>上海兰凯后台管理系统</title>
-<!-- Custom Theme files -->
-<link href="/static/management/assets/css/style.css" rel="stylesheet" type="text/css" media="all"/>
-<!-- Custom Theme files -->
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+<title>django-websocket</title>
 <script type="text/javascript" src="/static/management/assets/js/jquery.js"></script>
-<script type="text/javascript" src="/static/management/assets/js/login.js"></script>
-<script type="text/javascript" src="/static/management/assets/js/wwwlankamcom.js"></script>
+<script type="text/javascript">//<![CDATA[
+$(function () {
+		$('#send_message').click(function () {
+			var socket = new WebSocket("wss://www.lankam.shop/websocket/connect");
+			socket.onopen = function () {
+			console.log('WebSocket open');//成功连接上Websocket
+			socket.send($('#message').val());//发送数据到服务端
+			};
+			socket.onmessage = function (e) {
+			console.log('message: ' + e.data);//打印服务端返回的数据
+			$('#messagecontainer').prepend('<p>' + e.data + '</p>');
+			};
+			});
+		});
+//]]></script>
 </head>
 <body>
-<div class="login">
-	<h2>上海兰凯后台管理系统</h2>
-	<div class="login-top">
-		<h1>登录</h1>
-		<form>
-			<input type="text" id="username" name="username" value="用户名" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = '用户名';}">
-			<input type="password" id="password" name="password" value="password" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'password';}">
-	    </form>
-	    <div class="forgot">
-	    	<a href="#">忘记密码</a>
-			<input type="submit" value="登录" id="login">
-	    </div>
-	</div>
-	<div class="login-bottom">
-		<h3 id="result"></h3>
-	</div>
-</div>	
-<div class="copyright">
-	<p>Copyright &copy; 2017.Lankam All rights reserved. - <a href="http://www.lankam.com/" target="_blank" title="兰凯展览展示">兰凯展览展示</a></p>
+<br>
+<input type="text" id="message" value="Hello, World!"/>
+<button type="button" id="send_message">发送 message</button>
+<h1>Received Messages</h1>
+<div id="messagecontainer">
+
 </div>
-
-
 </body>
 </html>

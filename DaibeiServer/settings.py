@@ -26,7 +26,7 @@ SECRET_KEY = 'qg0^jeww36dp$d-&lbm0j*%!ik4^7(qfps0ll12o_(zdd@)srr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['119.23.45.38']
+ALLOWED_HOSTS = ['119.23.45.38' , 'www.lankam.shop']
 
 
 # Application definition
@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'login',
     'resourceManager',
+	'dwebsocket',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -51,7 +52,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+	'dwebsocket.middleware.WebSocketMiddleware'
 )
+
+WEBSOCKET_ACCEPT_ALL = True
 
 ROOT_URLCONF = 'DaibeiServer.urls'
 
