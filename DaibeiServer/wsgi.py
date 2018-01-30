@@ -18,3 +18,5 @@ sys.path.insert(0,PROJECT_DIR)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DaibeiServer.settings")
 
 application = get_wsgi_application()
+
+

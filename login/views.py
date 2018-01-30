@@ -18,7 +18,6 @@ from login.models import Admin_Info
 from login.sql import *
 from .Authentication import *
 from resourceManager.models import *
-from dwebsocket import require_websocket 
 
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
@@ -220,8 +219,19 @@ def GetAllUserList(request):
 		return HttpResponse("{}")
 
 
-@require_websocket
 def WebSocketConnect(request):
-	message = request.websocket.wait()
-	request.websocket.send(message)	
+	log_write('info', 'no send??')
+	log_write('info', 'no send222??')
+	import uwsgi
+	log_write('info', 'no send222??')
+	uwsgi.websocket_handshake()
+	log_write('info', 'woshou')
+	while True:
+		log_write('info', 'wait recv')
+		msg = uwsgi.websocket_recv()
+		log_write('info', 'send msg')
+		uwsgi = websocket_send(msg)
+
+def CACheck(request):
+	return render(request,"fileauth.txt")
 

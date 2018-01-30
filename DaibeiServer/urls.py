@@ -17,6 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from login import views as login_views
 from resourceManager import views as resource_views
+from weixinServer import views as weixin_views
 
 urlpatterns = [
     #url(r'^$',login_views.index,name='index'),
@@ -41,5 +42,9 @@ urlpatterns = [
 	# 后台数据库管理	
 	url(r'^superadmin/', include(admin.site.urls)),
 	# WebSocket
-	url(r'^websocket/connect$', login_views.WebSocketConnect, name='WebSocketConnect')
+	url(r'^websocket/connect$', login_views.WebSocketConnect, name='WebSocketConnect'),
+	url(r'.well-known/pki-validation/fileauth.txt$', login_views.CACheck, name='cacheck'),
+	# 微信服务号
+	url(r'weixinServer$', weixin_views.WeiXinCheck, name="weixincheck"),								# 微信消息获取
+	url(r'weixinServer/getqrcode$', weixin_views.WeiXinGetQrCode, name='getqrcode'),						# 客户端获取带参数的二维码
 ]
