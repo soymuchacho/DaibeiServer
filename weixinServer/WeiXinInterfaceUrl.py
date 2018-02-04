@@ -16,3 +16,6 @@ GetAccessTokenUrl = '/cgi-bin/token'
 
 # 获取带参数的临时二维码
 GetTemporaryQrCodeUrl = '/cgi-bin/qrcode/create?access_token='
+
+# 获取用户信息
+GetWeiXinUserInfoUrl = '/cgi-bin/user/info?'

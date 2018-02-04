@@ -12,6 +12,7 @@ class WeiXinAccess():
 	WeiXinAccessToken = ''
 
 	def GetWeiXinAccess(self):
+		log_write('info', 'GetWeiXinAccess')
 		Url = "https://" + AccessPoint[0] + GetAccessTokenUrl + '?grant_type={0}&appid={1}&secret={2}';
 
 		reqUrl = Url.format('client_credential', WeiXinAppID, WeiXinSecret)

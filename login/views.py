@@ -18,6 +18,7 @@ from login.models import Admin_Info
 from login.sql import *
 from .Authentication import *
 from resourceManager.models import *
+import redis
 
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
@@ -78,7 +79,11 @@ def Authentication(request):
 			log_write('info','生成token : ')
 			log_write('info',result)
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
-			cache.set(result,username,ACCOUNT_LOGIN_DEFAULT_TIME)
+			oldtoken = cache.get(username)
+			if oldtoken != None:
+				cache.set(oldtoken,username,timeout=0)
+			cache.set(result,username,timeout=None)
+			cache.set(username,result,timeout=None)
 			
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)
@@ -141,7 +146,11 @@ def AdminAuthentication(request):
 			log_write('info','generatetoken')
 			log_write('info',token)
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
-			cache.set(token,adminname,ACCOUNT_LOGIN_DEFAULT_TIME)
+			oldtoken = cache.get(adminname)
+			if oldtoken != None:
+				cache.set(oldtoken,adminname,timeout=0)
+			cache.set(token,adminname,timeout=None)
+			cache.set(adminname,token,timeout=None)
 			
 			result['token'] = token
 			
@@ -220,17 +229,54 @@ def GetAllUserList(request):
 
 
 def WebSocketConnect(request):
-	log_write('info', 'no send??')
-	log_write('info', 'no send222??')
+	token = request.GET.get("token");
+		
+	log_write('info', 'websocket request..')
+	user = CheckUserToken(token)
+#	if user == None:
+#		return HttpResponse("{'error' : 'bad user'}")
 	import uwsgi
-	log_write('info', 'no send222??')
 	uwsgi.websocket_handshake()
-	log_write('info', 'woshou')
+	log_write('info', 'websocket..')
+	log_write('info', token)
+	r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
+	log_write('info','connect redis');	
+	channel = r.pubsub()
+	log_write('info','channel pubsub');	
+	channel.subscribe(token)
+	log_write('info','redis pubsub channel...');	
+	
+	websocket_fd = uwsgi.connection_fd()
+	redis_fd = channel.connection._sock.fileno()
+
+	log_write('info','will while...' );	
+	log_write('info',websocket_fd);	
+	log_write('info',redis_fd);	
 	while True:
-		log_write('info', 'wait recv')
-		msg = uwsgi.websocket_recv()
-		log_write('info', 'send msg')
-		uwsgi = websocket_send(msg)
+		uwsgi.wait_fd_read(websocket_fd, 3)
+		uwsgi.wait_fd_read(redis_fd)
+		uwsgi.suspend()
+		fd = uwsgi.ready_fd()
+		if fd > -1:
+			if fd == websocket_fd:
+				log_write('info','read from websocket')
+				msg = uwsgi.websocket_recv_nb()
+				log_write('info',msg)
+				if not msg == '':
+					log_write('info', 'websocket publish msg')
+					r.publish(token, msg)
+			elif fd == redis_fd:
+				log_write('info','redis publish msg')
+				msg = channel.parse_response()
+				log_write('info', msg)
+				t = 'message'
+				if t == msg[0]:
+					uwsgi.websocket_send(msg[2])
+		else:
+			# on timeout call websocket_recv_nb again to manage ping/pong
+			msg = uwsgi.websocket_recv_nb()
+			if msg:
+				r.publish(token, msg)
 
 def CACheck(request):
 	return render(request,"fileauth.txt")

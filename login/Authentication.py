@@ -9,7 +9,7 @@ from .RsaUtil import *
 from base.defines import *
 
 
-ACCOUNT_LOGIN_DEFAULT_TIME = 24 * 60 * 60
+ACCOUNT_LOGIN_DEFAULT_TIME = 24 * 60 * 60 * 365 * 100
 
 def GenerateToken(username,token_secretkey):
 	log_write('info','开始生成token')
