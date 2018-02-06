@@ -32,23 +32,23 @@ def Register(request):
 		location = request.POST.get('location')
 		if username == None:
 			log_write('info','用户名错误')
-			return HttpResponse("{'error':'用户名错误'}")
+			return HttpResponse("{\"error\":\"用户名错误\"}")
 		if password == None:
 			log_write('info','密码错误')
-			return HttpResponse("{'error':'密码错误'}")
+			return HttpResponse("{\"error\":\"密码错误\"}")
 		if location == None:
 			log_write('info','位置信息错误')
-			return HttpResponse("{'error':'位置信息错误'}")
+			return HttpResponse("{\"error\":\"位置信息错误\"}")
 		
 		log_write('info','开始注册')
 		bRet = RegisterUser(username,password,location)
 		if bRet == False:
 			log_write('info','账号注册失败')
-			return HttpResponse("{'error':'账号注册失败'}")
+			return HttpResponse("{\"error\":\"账号注册失败\"}")
 		log_write('info','帐号注册成功')
-		return HttpResponse("{'code':'200','msg' : 'ok'}")
+		return HttpResponse("{\"code\":\"200\",\"msg\" : \"ok\"}")
 	else:
-		return HttpResponse("{'error' : 'request post '}")
+		return HttpResponse("{\"error\" : \"request post \"}")
 
 # 帐号验证
 def Authentication(request):
@@ -58,16 +58,16 @@ def Authentication(request):
 		log_write('info','账号认证')
 		
 		if username == None:
-			return HttpResponse("{'error' : 'username error'}")
+			return HttpResponse("{\"error\" : \"username error\"}")
 		
 		if password == None:
-			return HttpResponse("{'error' : 'password error'}")
+			return HttpResponse("{\"error\" : \"password error\"}")
 
 
 		# 检测帐号
 		user = User_Info.objects.filter(username=username)
 		if len(user) == 0:
-			return HttpResponse("{'error':'username or password error'}")
+			return HttpResponse("{\"error\":\"username or password error\"}")
 		
 		if password == user[0].password:
 			ret_dict = {}
@@ -88,9 +88,9 @@ def Authentication(request):
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)
 		else:
-			return HttpResponse("{'error':'username or password error'}")
+			return HttpResponse("{\"error\":\"username or password error\"}")
 	else:
-		return HttpResponse("{'error':'badmethod'}") 
+		return HttpResponse("{\"error\":\"badmethod\"}") 
 
 
 # 登陆界面
@@ -105,20 +105,20 @@ def AdminRegister(request):
 		password = request.POST.get('password')
 		if username == None:
 			log_write('info','用户名错误')
-			return HttpResponse("{'error':'用户名错误'}")
+			return HttpResponse("{\"error\":\"用户名错误\"}")
 		if password == None:
 			log_write('info','密码错误')
-			return HttpResponse("{'error':'密码错误'}")
+			return HttpResponse("{\"error\":\"密码错误\"}")
 		
 		log_write('info','开始注册')
 		bRet = RegisterAdmin(username,password)	
 		if bRet == False:
-			return HttpResponse("{'error':'注册失败'}")
+			return HttpResponse("{\"error\":\"注册失败\"}")
 		log_write('info','帐号注册成功')
-		return HttpResponse("{'code':'200','msg' : 'ok'}")
+		return HttpResponse("{\"code\":\"200\",\"msg\" : \"ok\"}")
 	else:
-		return HttpResponse("{'error' : 'request post '}")
-	return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\" : \"request post \"}")
+	return HttpResponse("{\"error\":\"badmethod\"}")
 
 
 
@@ -233,8 +233,8 @@ def WebSocketConnect(request):
 		
 	log_write('info', 'websocket request..')
 	user = CheckUserToken(token)
-#	if user == None:
-#		return HttpResponse("{'error' : 'bad user'}")
+	if user == None:
+		return HttpResponse("{\"error\" : \"bad user\"}")
 	import uwsgi
 	uwsgi.websocket_handshake()
 	log_write('info', 'websocket..')

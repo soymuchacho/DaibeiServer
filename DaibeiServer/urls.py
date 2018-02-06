@@ -28,6 +28,7 @@ urlpatterns = [
 	url(r'^resourcelist$',resource_views.GetUserResourceList,name='getuserresourcelist'),
 	url(r'^resourcelist/version$',resource_views.GetUserResourceListVersion,name='getuserresourcelistversion'),
     url(r'^resource/download$',resource_views.Download_Resource,name='download'),
+	url(r'^game/getgameinfo$',resource_views.GetGameInfo,name='getgameinfo'),
 	# 管理员账号操作
 	url(r'^admin$',login_views.AdminLogin,name='adminlogin'),
 	url(r'^admin/register$',login_views.AdminRegister,name='AdminRegister'),

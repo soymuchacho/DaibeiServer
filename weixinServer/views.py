@@ -17,6 +17,9 @@ import json
 import xml.etree.cElementTree as ET
 import redis
 import time
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 Token = '7539252CA3CB72C1FC8945292164D62E'
 EncodingAESKey = 'fQsc2ka2PK5mEJT41zs2iE3dixF9f7Vdr4nENPbJsNG'
@@ -121,6 +124,10 @@ def WeiXinCheckTest(request):
 				msg = MsgHandle(fromOpenID.text)
 				log_write('info',msg)
 		log_write('info', 'success')
+		return_msg = '<xml> <ToUserName>< ![CDATA['+fromOpenID.text+'] ]></ToUserName> <FromUserName>< ![CDATA[' + touser_name.text + '] ]></FromUserName> <CreateTime>' + str(int(time.time())) + '</CreateTime> <MsgType>< ![CDATA[text] ]></MsgType> <Content>< ![CDATA[感谢您对兰凯互动的关注] ]></Content> </xml>'
+		log_write('info',return_msg)
+		returnxml = ET.tostring(return_msg.encode('utf-8'))
+		log_write('info',returnxml)
 		return HttpResponse('success');
 
 
@@ -146,7 +153,7 @@ def WeiXinCheck(request):
 		else:
 			if not signature == sMsgSignature:
 				return ierror.WXBizMsgCrypt_ValidateSignature_Error, None
-		
+		return_msg = 'success'	
 		log_write('info', 'parse begin')
 		# 进行数据解析
 	
@@ -161,8 +168,12 @@ def WeiXinCheck(request):
 		r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
 		channel = r.pubsub()
 		
-		if event.text == 'subcribe':
+		if event.text == 'subscribe':
+			log_write('info',' event subcribe')
 			log_write('info', eventKey.text)
+			clientname = eventKey.text.replace('qrscene_','')
+			token = cache.get(clientname)
+			log_write('info', token)
 			msg = MsgHandle(fromOpenID.text)
 			log_write('info',msg)
 			log_write('info','channel pubsub');	
@@ -184,8 +195,10 @@ def WeiXinCheck(request):
 				channel.subscribe(token)
 				log_write('info','redis pubsub channel...');	
 				r.publish(token,msg)
+		else:
+			log_write('info',event.text)
 		log_write('info', 'success')
-		return HttpResponse('success');
+		return HttpResponse(return_msg)
 
 # 获取带参数的微信二维码
 def WeiXinGetQrCode(request):
@@ -196,7 +209,7 @@ def WeiXinGetQrCode(request):
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
-			return HttpResponse("{'error' : 'bad user'}")
+			return HttpResponse("{\"error\" : \"bad user\"}")
 
 		# 设置参数
 
@@ -251,10 +264,10 @@ def WeiXinUserPlayedGame(request):
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
-			return HttpResponse("{'error' : 'bad user'}")
+			return HttpResponse("{\"error\" : \"bad user\"}")
 		gametimes = cache.get(weixinaccount)
 		if gametimes == None:
-			return HttpResponse("{'msg' : 'err'}")
+			return HttpResponse("{\"msg\" : \"err\"}")
 		
 		timestr = time.strftime('%Y-%m-%d',time.localtime(time.time()))
 		log_write('info',timestr)
@@ -266,6 +279,6 @@ def WeiXinUserPlayedGame(request):
 		uservalue = timestr + ':' + strTimes
 		log_write('info',uservalue)
 		cache.set(weixinaccount, uservalue, timeout=None)
-		return HttpResponse("{'msg' : 'ok'}")
+		return HttpResponse("{\"msg\" : \"ok\"}")
 	else:	
-		return HttpResponse("{'msg' : 'BAD Request'}")
+		return HttpResponse("{\"msg\" : \"BAD Request\"}")

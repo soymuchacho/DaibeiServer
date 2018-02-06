@@ -10,7 +10,7 @@ from django.core.cache import cache
 import os
 from login.Authentication import * 
 from .resource import *
-
+from base.config_xml import *
 
 ####################################################################################
 #																				   #
@@ -25,15 +25,15 @@ def GetUserResourceListVersion(request):
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 
 		result = GetResourceListVersion(user)
 		if result == None:
-			return HttpResponse("{'error' : 'no version'}")
+			return HttpResponse("{\"error\" : \"no version\"}")
 		
 		return HttpResponse(result)
 	else:
-		return HttpResponse("{'error' : 'badmethod'}")
+		return HttpResponse("{\"error\" : \"badmethod\"}")
 
 # 获取用户资源列表
 def GetUserResourceList(request):
@@ -42,16 +42,16 @@ def GetUserResourceList(request):
 		# 进行认证
 		user = CheckUserToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 		
 		# 从数据库中获取资源列表
 		result = GetResourceList(user)
 		if result == None:
-			return HttpResponse("{'error':'can't find resource list'}")
+			return HttpResponse("{\"error\":\"can't find resource list\"}")
 
 		return HttpResponse(result)
 	else:
-		return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\":\"badmethod\"}")
 
 # 资源下载
 def Download_Resource(request):
@@ -60,18 +60,18 @@ def Download_Resource(request):
 		# 进行认证
 		user = CheckUserToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 
 		fileid = request.POST.get('fileid')
 		print request.POST
 		#log_write('info','download file id %s',fileid)
 		response = ResourceDownLoad(fileid)
 		if response == None:
-			return HttpResponse("{'error':'file is not exists'}")
+			return HttpResponse("{\"error\":\"file is not exists\"}")
 		
 		return response
 	else:
-		return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\":\"badmethod\"}")
 
 ####################################################################################
 #																				   #
@@ -90,32 +90,32 @@ def GetAllResource(request):
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
 		admin = CheckAdminToken(oauth)
 		if admin == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 		
 		page = int(request.GET.get('page',0))
 		if page == 0:
-			return HttpResponse("{'error','page error'}")
+			return HttpResponse("{\"error\",\"page error\"}")
 		
 		ret_dict = {}
 		reslist = GetAllResourceFromSQL(page)
 		if reslist != None:
-			ret_dict['pages'] = GetAllResourcePageCount()
-			ret_dict['resources'] = []
+			ret_dict["pages"] = GetAllResourcePageCount()
+			ret_dict["resources"] = []
 			for res in reslist:
 				node = {}
-				node['id'] = res.resource_id
-				node['name'] = res.resource_name
-				node['size'] = str(res.resource_size)
-				node['type'] = res.resource_type
-				node['desc'] = res.resource_describe
-				node['date'] = res.resource_date
-				ret_dict['resources'].append(node)
+				node["id"] = res.resource_id
+				node["name"] = res.resource_name
+				node["size"] = str(res.resource_size)
+				node["type"] = res.resource_type
+				node["desc"] = res.resource_describe
+				node["date"] = res.resource_date
+				ret_dict["resources"].append(node)
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)
 		else:
 			return HttpResponse("{}")
 	else:
-		return HttpResponse("{'error':'bad method'}")
+		return HttpResponse("{\"error\":\"bad method\"}")
 # 资源上传
 def Upload_Resource(request):
 	if request.method == 'POST':
@@ -124,25 +124,25 @@ def Upload_Resource(request):
 		# 进行认证
 		user = CheckAdminToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 		
 		uploadSize = request.POST.get('size',None)				# 上传文件的大小
 		strs = 'uploadSize %s' % uploadSize
 		log_write('info',strs)
 		if uploadSize == None:
-			return HttpResponse("{'error' : 'no files size'}")
+			return HttpResponse("{\"error\" : \"no files size\"}")
 		
 		restype = request.POST.get('type',None)				# 上传文件的类型
 		if not restype:
-			return HttpResponse("{'error' : 'no files type'}")
+			return HttpResponse("{\"error\" : \"no files type\"}")
 
 		resdesc = request.POST.get('desc',None)				# 上传文件的描述
 		if not resdesc:
-			return HttpResponse("{'error' : 'no files description'}")
+			return HttpResponse("{\"error\" : \"no files description\"}")
 
 		uploadFile = request.FILES.get('file',None)				# 获取上传的文件，如果没有文件，则默认为None
 		if not uploadFile:
-			return HttpResponse("{'error' : 'no files for upload'}")
+			return HttpResponse("{\"error\" : \"no files for upload\"}")
 		
 		# 检查资源名是否重名
 		finalname = CheckResName(uploadFile.name)
@@ -167,14 +167,14 @@ def Upload_Resource(request):
 		if totalsize != long(uploadSize):
 			# 将现有的文件删除
 			os.remove(filepath)
-			return HttpResponse("{'error' : 'upload file failed,not all size'}")
+			return HttpResponse("{\"error\" : \"upload file failed,not all size\"}")
 		
 		# 将上传的文件信息保存在数据库中
 		SaveResourceToSQL(fileid,finalname,filepath,uploadSize,restype,resdesc)	
 		
-		return HttpResponse("{'msg':'upload ok'}")
+		return HttpResponse("{\"msg\":\"upload ok\"}")
 	else:
-		return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\":\"badmethod\"}")
 
 
 # 资源删除
@@ -184,18 +184,18 @@ def Delete_Resource(request):
 		# 进行认证
 		user = CheckAdminToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 		resid = request.POST.get('resourceid','unkown')
 		if resid == 'unkown':
-			return HttpResponse("{'error':'bad request'}")
+			return HttpResponse("{\"error\":\"bad request\"}")
 		strd = '要删除的资源id %s' % resid
 		log_write('info',strd)
 		bRet = DeleteResourceFromSQL(resid)
 		if bRet == False:
-			return HttpResponse("{'error':'remove error'}")
-		return HttpResponse("{'msg':'ok'}")
+			return HttpResponse("{\"error\":\"remove error\"}")
+		return HttpResponse("{\"msg\":\"ok\"}")
 	else:
-		return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\":\"badmethod\"}")
 
 
 # 设置用户资源列表
@@ -205,12 +205,32 @@ def ResetUserResourceList(request):
 		# 进行认证
 		user = CheckAdminToken(oauth)
 		if user == None:
-			return HttpResponse("{'error':'bad user'}")
+			return HttpResponse("{\"error\":\"bad user\"}")
 		res_list = reqeust.POST.get('resourcelist','unkown')
 		json_list = json.dumps(res_list)
 
 		SetUserResourceList(json_list)
-		return HttpResponse("'msg':'ok'")
+		return HttpResponse("\"msg\":\"ok\"")
 	else:
-		return HttpResponse("{'error':'badmethod'}")
+		return HttpResponse("{\"error\":\"badmethod\"}")
+
+# 获取游戏信息
+def GetGameInfo(request):
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		log_write('info','GetGameInfo')
+		# 进行认证
+		user = CheckUserToken(oauth)
+		if user == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		gameid = request.POST.get("gameid")
+		gameinfo = sGameInfoMgr.GetOneGameInfo(gameid)
+		if gameinfo != None:
+			data_json = gameinfo.ConversionJson()
+			return HttpResponse(data_json)
+		else:
+			return HttpResponse("{\"error\" : \"no game\"}")
+	else:
+		return HttpResponse("{\"error\":\"badmethod\"}")
+
 
