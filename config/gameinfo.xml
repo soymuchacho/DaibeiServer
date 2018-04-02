@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-	<gameinfo gameid="1" gamename="Fruit" price="0.4" />
-	<gameinfo gameid="2" gamename="Basketball" price="0.4" />
+	<gameinfo gameid="1" gamename="Fruit" price="0.1" />
+	<gameinfo gameid="2" gamename="Basketball" price="0.2" />
 </root>
 
 

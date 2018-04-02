@@ -1,0 +1,8 @@
+10.1.1.156    10.1.1.160 服务器登录     zeus 用户  密码:zeus    端口  22 
+                                        root 用户  密码:taomee  端口  22
+10.1.1.156 数据库  zeusmgr 用户 密码：zeuspwd      
+                   root 用户     密码:  password
+
+
+
+select a.userid, a.name, a.gold, a.score,a.charid, a.iconid,a.last_onlinetm,b.friendid,b.relation_type,b.create_time from DB_ZEUS_03.table_player_info as a LEFT JOIN DB_ZEUS_03.table_friend_info as b ON a.userid = b.userid and userid=102003;
