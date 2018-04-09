@@ -18,9 +18,12 @@ from django.contrib import admin
 from login import views as login_views
 from resourceManager import views as resource_views
 from weixinServer import views as weixin_views
+from django.views.static import serve
+from django.conf import settings
 
 urlpatterns = [
     #url(r'^$',login_views.index,name='index'),
+	url(r'^hGsKXkxNsZ.txt$',serve,{'document_root': settings.MEDIA_ROOT}),
     # 用户账号操作
 	url(r'^register$',login_views.Register,name='Register'),
     #url(r'^advancelogin$',login_views.AdvanceLogin,name='advancelogin'),
@@ -29,12 +32,15 @@ urlpatterns = [
 	url(r'^resourcelist/version$',resource_views.GetUserResourceListVersion,name='getuserresourcelistversion'),
     url(r'^resource/download$',resource_views.Download_Resource,name='download'),
 	url(r'^game/getgameinfo$',resource_views.GetGameInfo,name='getgameinfo'),
+	url(r'^game/getpriceinfo$',resource_views.GetPriceInfo,name='getpriceinfo'),
+	url(r'^config/uploadConfig$',resource_views.UploadConfigFile,name='UploadConfigFile'),
 	# 管理员账号操作
 	url(r'^admin$',login_views.AdminLogin,name='adminlogin'),
 	url(r'^admin/register$',login_views.AdminRegister,name='AdminRegister'),
 	#url(r'^admin/advancelogin$',login_views.AdminAdvanceLogin,name='AdminAdvanceLogin'),
 	url(r'^admin/authentication$',login_views.AdminAuthentication,name='AdminAuthentication'),
 	url(r'^admin/manager$',login_views.EnterManager,name='EnterManager'),
+	url(r'^admin/manager/shutdown/machine$',login_views.ShutDownMachine,name='ShutDownMachine'),
 	url(r'^admin/manager/new/getuserlist$',login_views.GetAllUserList,name='GetAllUserList'),
 	url(r'^admin/manager/new/getresourcelist$',resource_views.GetAllResource,name='GetAllResource'),
 	url(r'^admin/manager/delete/resource$',resource_views.Delete_Resource,name='DeleteResource'),

@@ -27,20 +27,26 @@ def RegisterUser(username,password,location):
 	# 先查询数据库用户是否已经存在
 	old_user = User_Info.objects.filter(username=username)
 	if len(old_user) != 0:
-		#log_write('info','用户%s已存在,注册失败',username)
+		str = "用户{0}已存在,注册失败".format(username)
+		log_write('info',str)
 		return False
 
 	old_admin = Admin_Info.objects.filter(adminname=username)
 	if len(old_admin) != 0:
-		#log_write('info','用户%s已存在,注册失败',username)
+		str = "用户{0}已存在,注册失败".format(username)
+		log_write('info',str)
 		return False
-	log_write('info','用户不存在，可以注册')
+	
+	str = "用户{0}不存在,可以注册".format(username)
+	log_write('info',str)
 	
 	now_time = time.strftime("%Y-%02m-%02d %02H:%02M:%02S",time.localtime(time.time()))
 	
 	# 用户不存在，创建
 	new_user = User_Info(username=username,password=password,location=location,use_time=now_time)
 	if new_user == None:
+		str = "用户{0}创建失败".format(username)
+		log_write('info',str)
 		return False
 	new_user.save()
 	return True

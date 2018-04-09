@@ -206,9 +206,12 @@ def WeiXinGetQrCode(request):
 	if request.method == 'GET':
 		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
 		
+		log_write('info','-----request weixin QrCode-----');
+		
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
+			log_write('info','request weinxin QrCode bad user');
 			return HttpResponse("{\"error\" : \"bad user\"}")
 
 		# 设置参数
@@ -217,11 +220,8 @@ def WeiXinGetQrCode(request):
 			WeiXinAccessSingleton.GetWeiXinAccess()
 
 		postdata = '{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "' + user.username + '"}}}'
-		log_write('info', WeiXinAccessSingleton.WeiXinAccessToken)
 		reqURL = 'https://' + AccessPoint[0] + GetTemporaryQrCodeUrl + WeiXinAccessSingleton.WeiXinAccessToken
-		log_write('info', reqURL)
-		log_write('info', postdata)
-	
+
 		req = urllib2.Request(url = reqURL, data = postdata)
 		res_data = urllib2.urlopen(req)
 
@@ -240,16 +240,19 @@ def WeiXinGetQrCode(request):
 			result = json.loads(res)
 			if result.has_key("ticket"):
 				ticket = result["ticket"]
-			
+			else:
+				log_write('info','request QrCode : no ticket!');
+
 		if result.has_key("url"):
 			qrcodeurl = result["url"]
 		
-		log_write('info', 'result:')	
-		log_write('info', res.decode('utf-8'))	
-		log_write('info', ticket)
+		str = 'request QrCode result : {0} ticket: {1}'.format(res.decode('utf-8'), ticket)
+		log_write('info', str)
+
 		ticket_dict = { "ticket" : ticket }
 		httpres = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?' + urllib.urlencode(ticket_dict)
-		log_write('info', httpres.decode('utf-8'))	
+		str = 'QrCode http : {0}'.format(httpres.decode('utf-8'))	
+		log_write('info',str);
 		return HttpResponse(httpres.decode('utf-8'))
 
 

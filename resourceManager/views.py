@@ -223,14 +223,78 @@ def GetGameInfo(request):
 		user = CheckUserToken(oauth)
 		if user == None:
 			return HttpResponse("{\"error\" : \"bad user\"}")
-		gameid = request.POST.get("gameid")
-		gameinfo = sGameInfoMgr.GetOneGameInfo(gameid)
-		if gameinfo != None:
-			data_json = gameinfo.ConversionJson()
+		
+		goodsid = request.POST.get("goodsid")
+		
+		disinfo = sDiscountsMgr.GetOneDiscountsInfo(goodsid)
+		if disinfo != None:
+			data_json = disinfo.ConversionGameDictJson()
 			return HttpResponse(data_json)
 		else:
 			return HttpResponse("{\"error\" : \"no game\"}")
 	else:
 		return HttpResponse("{\"error\":\"badmethod\"}")
+
+# 获取游戏后商品优惠价格信息
+def GetPriceInfo(request):
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		log_write('info','GetPriceInfo')
+		# 进行认证
+		user = CheckUserToken(oauth)
+		if user == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		goodsid = request.POST.get("goodsid")
+		gameid = request.POST.get("gameid")
+		disInfo = sDiscountsMgr.GetOneDiscountsInfo(goodsid)
+		if disInfo != None:
+			data_json = disInfo.ConversionJson(str(gameid))
+			return HttpResponse(data_json)
+		else:
+			return HttpResponse("{\"error\" : \"no game\"}")
+	else:
+		return HttpResponse("{\"error\":\"badmethod\"}")
+
+
+# 配置文件上传
+def UploadConfigFile(request):
+	if request.method == 'POST':
+		log_write('info','upload Config File')
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		log_write('info',oauth)
+		# 进行认证
+		user = CheckAdminToken(oauth)
+		if user == None:
+			return HttpResponse("{\"error\":\"bad user\"}")
+		
+		uploadName = request.POST.get('name',None)				# 上传文件名
+		if uploadName == None:
+			return HttpResponse("{\"error\" : \"no files name\"}")
+		
+		uploadFile = request.FILES.get('file',None)				# 获取上传的文件，如果没有文件，则默认为None
+		if not uploadFile:
+			return HttpResponse("{\"error\" : \"no files for upload\"}")
+		path = os.path.abspath('.')
+		filepath = 'config/' + uploadName
+		data_path = os.path.join(path,filepath)
+		
+		dest = open(data_path,'wb+')
+		# 文件大于2.5M时，分片读取，否则直接读取
+		if uploadFile.multiple_chunks() == False:
+			content = uploadFile.read()
+			dest.write(content)
+		else:
+			for chunk in uploadFile.chunks():
+				dest.write(chunk)
+		dest.close()
+
+		totalsize = os.path.getsize(filepath)
+		log_write('info','upload config successful')
+		
+		sXmlConfigMgr.reload()
+		return HttpResponse("{\"msg\":\"upload ok\"}")
+	else:
+		return HttpResponse("{\"error\":\"badmethod\"}")
+
 
 

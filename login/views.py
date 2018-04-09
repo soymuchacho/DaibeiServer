@@ -5,6 +5,7 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from .forms import LoginForm
 from .RsaUtil import *
+from .Online import *
 from django.core.cache import cache
 from base.logger import *
 from base.defines import *
@@ -19,7 +20,6 @@ from login.sql import *
 from .Authentication import *
 from resourceManager.models import *
 import redis
-
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
 
@@ -68,7 +68,7 @@ def Authentication(request):
 		user = User_Info.objects.filter(username=username)
 		if len(user) == 0:
 			return HttpResponse("{\"error\":\"username or password error\"}")
-		
+
 		if password == user[0].password:
 			ret_dict = {}
 			
@@ -76,15 +76,20 @@ def Authentication(request):
 			result = GenerateToken(user[0].username,token_secretkey)
 			ret_dict['token'] = result
 
-			log_write('info','生成token : ')
-			log_write('info',result)
+			str = "user login : username {0} password {1} new token {2}".format(username,password,result)
+			log_write('info',str);
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			oldtoken = cache.get(username)
 			if oldtoken != None:
-				cache.set(oldtoken,username,timeout=0)
+				# 已经登录
+				cache.set(oldtoken,username,timeout=None)
+				g_kMachineMgr.MachineOffLine(username, oldtoken);
+
 			cache.set(result,username,timeout=None)
 			cache.set(username,result,timeout=None)
-			
+	
+			g_kMachineMgr.MachineLogin(username, result, user[0].location, user[0].manager, user[0].use_time)
+
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)
 		else:
@@ -148,7 +153,7 @@ def AdminAuthentication(request):
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			oldtoken = cache.get(adminname)
 			if oldtoken != None:
-				cache.set(oldtoken,adminname,timeout=0)
+				cache.set(oldtoken,adminname,timeout=None)
 			cache.set(token,adminname,timeout=None)
 			cache.set(adminname,token,timeout=None)
 			
@@ -182,18 +187,17 @@ def EnterManager(request):
 # 获取全部用户
 def GetAllUserList(request):
 	if request.method == 'GET':
-		log_write('info','GetAllUserList')
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
 		admin = CheckAdminToken(oauth)
 		if admin == None:
-			log_write('info','can not find oauth')
-			return HttpResponse("{'error':'oauth error'}")
+			log_write('info','get all user list can not find admin')
+			return HttpResponse("{\"error\":\"bad user\"}")
 	
 		ret_dict = {}
 		
 		page = int(request.GET.get('page',0))
 		if page == 0:
-			return HttpResponse("{'error':'page error'}")
+			return HttpResponse("{\"error\":\"page error\"}")
 		
 		userlist = GetAllUserListFromSQL(page);
 		if userlist != None:
@@ -201,12 +205,16 @@ def GetAllUserList(request):
 			ret_dict['pages'] = GetAllUserListPageCount()
 			ret_dict['users'] = []
 			
-			log_write('indo','userlist')
 			for user in userlist:
 				node = {}
 				node['username'] = user.username
 				node['location'] = user.location
-				
+				node['manager'] = user.manager
+				node['useTime'] = user.use_time
+
+				isOnline = g_kMachineMgr.IsMachineOnline(user.username)
+				node['isOnline'] = isOnline
+
 				# 查找resourceManager中的UserResourceList表
 				res_info = UserResourceList.objects.filter(username=user.username)
 				if len(res_info) != 0:
@@ -214,44 +222,38 @@ def GetAllUserList(request):
 				else:
 					version = ""
 				node['version'] = version
-				date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-				node['date'] = user.use_time 
+
 				ret_dict['users'].append(node)
-				log_write('info',user.username)
-				log_write('info',user.location)
-				log_write('info',version)
-				log_write('info',date)
+				outstr = "machine list : {0} {1} {2} {3} {4}".format(user.username, user.location, user.manager, user.use_time, isOnline)
+				log_write('info', outstr)
+
 			ret_json = json.dumps(ret_dict)
 			log_write('info',ret_json)
 			return HttpResponse(ret_json)		
-		log_write('info','no userlist')	
 		return HttpResponse("{}")
 
 
 def WebSocketConnect(request):
 	token = request.GET.get("token");
 		
-	log_write('info', 'websocket request..')
 	user = CheckUserToken(token)
 	if user == None:
 		return HttpResponse("{\"error\" : \"bad user\"}")
+
 	import uwsgi
 	uwsgi.websocket_handshake()
-	log_write('info', 'websocket..')
-	log_write('info', token)
 	r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
-	log_write('info','connect redis');	
 	channel = r.pubsub()
-	log_write('info','channel pubsub');	
 	channel.subscribe(token)
-	log_write('info','redis pubsub channel...');	
 	
 	websocket_fd = uwsgi.connection_fd()
 	redis_fd = channel.connection._sock.fileno()
+	
+	if g_kMachineMgr.SetMachineOnLine(user.username, token) == False:
+		str = "machine cant login : {0} {1}".format(user.username, token)
+		log_write('info', str);
+		return HttpResponse("{\"error\":\"bad user\"}");
 
-	log_write('info','will while...' );	
-	log_write('info',websocket_fd);	
-	log_write('info',redis_fd);	
 	while True:
 		uwsgi.wait_fd_read(websocket_fd, 3)
 		uwsgi.wait_fd_read(redis_fd)
@@ -259,25 +261,54 @@ def WebSocketConnect(request):
 		fd = uwsgi.ready_fd()
 		if fd > -1:
 			if fd == websocket_fd:
-				log_write('info','read from websocket')
-				msg = uwsgi.websocket_recv_nb()
-				log_write('info',msg)
-				if not msg == '':
-					log_write('info', 'websocket publish msg')
-					r.publish(token, msg)
+				try:
+					msg = uwsgi.websocket_recv_nb()
+					if not msg == '':
+						output = 'fd[{0}] token[{1}] recv msg : {2}'.format(fd, token, msg)
+						log_write('info', output)
+						if msg == '@heart':
+							r.publish(token, msg)
+				except IOError:
+					channel.unsubscribe(token)
+					g_kMachineMgr.MachineOffLine(user.username, token);
+					output = 'fd[{0}] token[{1}] {2} disconnect'.format(fd, token, user.username)
+					log_write('info', output)
+					return ""
 			elif fd == redis_fd:
-				log_write('info','redis publish msg')
 				msg = channel.parse_response()
-				log_write('info', msg)
 				t = 'message'
+				
+				output = 'fd[{0}] token[{1}] redis send msg : {2}'.format(fd, token, msg)
+				log_write('info', output)
+				
 				if t == msg[0]:
 					uwsgi.websocket_send(msg[2])
 		else:
 			# on timeout call websocket_recv_nb again to manage ping/pong
 			msg = uwsgi.websocket_recv_nb()
 			if msg:
+				str = "ping pong : {0} {1} {2}".format(user.username, token, msg)
+				log_write('info', str);
 				r.publish(token, msg)
 
 def CACheck(request):
 	return render(request,"fileauth.txt")
+
+def ShutDownMachine(requrest):
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			log_write('info','Shut Down Machine Can Not Find Admin')
+			return HttpResponse("{\"error\":\"bad user\"}")
+
+		MachineName = request.POST.get("machinename",None)
+		if MachineName == None:
+			return HttpResponse("{\"error\":\"cant find machine\"}")
+		
+		if g_kMachineMgr.ShutDownMachine(MachineName) == False:
+			return HttpResponse("{\"error\":\"failed\"}");
+		return HttpResponse("{\"msg\":\"ok\"}")
+	return HttpResponse("{\"error\":\"bad request\"}") 
+
 
