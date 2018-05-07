@@ -1,13 +1,20 @@
 <root>
+  <discountsInfo goodsid="78" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="77" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="44" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="43" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="80" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="42" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="79" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="40" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="41" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="82" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="81" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="26" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
-  <discountsInfo goodsid="73" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
-  <discountsInfo goodsid="74" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="84" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="83" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="75" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
+  <discountsInfo goodsid="73" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="38" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="39" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />
   <discountsInfo goodsid="76" gameid1="2001" gameprice1="0.4" gameid2="2002" gameprice2="0.4" gameid3="2003" gameprice3="0.4" gamenum="3" />

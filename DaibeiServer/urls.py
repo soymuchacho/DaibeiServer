@@ -55,5 +55,7 @@ urlpatterns = [
 	url(r'weixinServer$', weixin_views.WeiXinCheck, name="weixincheck"),								# 微信消息获取
 	url(r'weixinServer/test$', weixin_views.WeiXinCheckTest, name="weixinchecktest"),								# 微信消息获取
 	url(r'weixinServer/getqrcode$', weixin_views.WeiXinGetQrCode, name='getqrcode'),					# 客户端获取带参数的二维码
-	url(r'weixinServer/user/playedgame$', weixin_views.WeiXinUserPlayedGame, name="UserPlayedGame")		# 微信用户游戏一次
+	url(r'weixinServer/user/playedgame$', weixin_views.WeiXinUserPlayedGame, name="UserPlayedGame"),	# 微信用户游戏一次
+	url(r'leshan/getqrcode$', weixin_views.GetLeShanQrcode, name="GetLeshanQrcode"),		# leshan gongzhonghao
+	url(r'leshan/server/notice$', weixin_views.LeShanServerNotice, name="LeShanServerNotice"),		# leshan gongzhonghao
 ]

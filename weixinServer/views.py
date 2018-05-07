@@ -17,12 +17,15 @@ import json
 import xml.etree.cElementTree as ET
 import redis
 import time
+from LeShan import *
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 Token = '7539252CA3CB72C1FC8945292164D62E'
 EncodingAESKey = 'fQsc2ka2PK5mEJT41zs2iE3dixF9f7Vdr4nENPbJsNG'
+
+LeShanToken = '7123122CA3CB7DBSE8945292164D62E'
 
 # 获取用户信息
 def GetWeiXinUserInfo(userOpenID):
@@ -93,6 +96,38 @@ def MsgHandle(userOpenID):
 	else:
 		log_write('info', 'MsgHandle None')
 		return None
+
+def LeShanMsgHandle(weixinname):
+	log_write('info', 'LeShanMsgHandle')
+	log_write('info', weixinname)
+	discounttimes = cache.get(weixinname)
+	timestr = ''
+	timeoldstr = ''
+	if discounttimes == None:
+		log_write('info','discounttimes is none')
+		timestr = time.strftime('%Y-%m-%d',time.localtime(time.time()))
+		log_write('info',timestr)
+		discounttimes = timestr + ':' + '0'
+		log_write('info',discounttimes)
+		cache.set(weixinname,discounttimes, timeout=None)
+	else:
+		strSplit = discounttimes.split(':')
+		i = int(strSplit[1])
+		i = i + 1
+		discounttimes = timeoldstr + ':' + str(i)
+
+	strSplit = discounttimes.split(":")
+	log_write('info', strSplit)
+	msg = {
+			'msgtype' : 'LeShanPublish',
+			'username' : weixinname,
+			'openid' : weixinname,
+			'discounttimes' : strSplit[1]
+		}
+	msg_json = json.dumps(msg)
+	return msg_json
+
+
 # 微信验证
 def WeiXinCheckTest(request):
 		log_write('info', request.body)
@@ -254,6 +289,101 @@ def WeiXinGetQrCode(request):
 		str = 'QrCode http : {0}'.format(httpres.decode('utf-8'))	
 		log_write('info',str);
 		return HttpResponse(httpres.decode('utf-8'))
+
+# 获取乐山公众号的带参数二维码
+def GetLeShanQrcode(request):
+	request.encoding = 'utf8'
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		
+		log_write('info','-----request leshan gongzhong hao weixin QrCode-----');
+		
+		# 认证
+		#user = CheckUserToken(oauth)
+		#if user == None:
+		#	log_write('info','request leshan weinxin QrCode bad user');
+		#	return HttpResponse("{\"error\" : \"bad user\"}")
+
+		if LeShanPublishAccessSingleton.LeShanPublishAccessToken.strip() == '':
+			LeShanPublishAccessSingleton.GetWeiXinAccess()
+
+		str_out = 'leshanpublish access : {0}'.format(LeShanPublishAccessSingleton.LeShanPublishAccessToken)
+		log_write('info',str_out)
+		postdata = '{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "test123"}}}'
+		reqURL = 'https://' + AccessPoint[0] + GetTemporaryQrCodeUrl + LeShanPublishAccessSingleton.LeShanPublishAccessToken
+
+		str_out = 'reqUrl : {0}'.format(reqURL)
+		log_write('info',str_out)
+		req = urllib2.Request(url = reqURL, data = postdata)
+		res_data = urllib2.urlopen(req)
+
+		res = res_data.read()
+		
+		result = json.loads(res)
+		
+		log_write('info','---------------------------1')
+		if result.has_key("ticket"):
+			ticket = result["ticket"]
+		else:
+			log_write('info','---------------------------2')
+			LeShanPublishAccessSingleton.GetWeiXinAccess()
+			reqURL = AccessPoint[0] + GetTemporaryQrCodeUrl + LeShanPublishAccessSingleton.LeShanPublishAccessToken
+			req = urllib2.Request(url = reqURL, data = postdata)
+			res_data = urllib2.urlopen(req)
+		
+			log_write('info','---------------------------3')
+			res = res_data.read()
+			result = json.loads(res)
+			if result.has_key("ticket"):
+				ticket = result["ticket"]
+			else:
+				log_write('info','request QrCode : no ticket!');
+			log_write('info','---------------------------4')
+
+		log_write('info','---------------------------5')
+		if result.has_key("url"):
+			qrcodeurl = result["url"]
+		
+		str = 'request QrCode result : {0} ticket: {1}'.format(res.decode('utf-8'), ticket)
+		log_write('info', str)
+
+		ticket_dict = { "ticket" : ticket }
+		httpres = 'https://mp.weixin.qq.com/cgi-bin/showqrcode?' + urllib.urlencode(ticket_dict)
+		str = 'QrCode http : {0}'.format(httpres.decode('utf-8'))	
+		log_write('info',str);
+		return HttpResponse(httpres.decode('utf-8'))
+
+
+# 乐山公众号服务器请求
+def LeShanServerNotice(request):
+	if request.method == 'GET':
+		client = request.GET.get('client', None)
+		if client == None:
+			return HttpResponse("error")
+		weixinid = request.GET.get('weixinid',None)
+		if weixinid == None:
+			return HttpResponse("error")
+		sTimestamp = request.GET.get('timestamps')
+		if sTimestamp == None:
+			return HttpResponse("error")
+		str_out = 'recv leshan server msg : {0} {1} {2}'.format(client, weixinid, sTimestamp)
+		log_write('info', str_out)
+
+		r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
+		channel = r.pubsub()
+
+		token = cache.get(client)
+
+		str_out = 'parse leshan server msg get client token : {0}'.format(token)
+		log_write('info',str_out)
+
+		msg = LeShanMsgHandle(weixinid)
+		
+		channel.subscribe(token)
+		r.publish(token,msg)
+		str_out = 'succcess publish msg : {0}'.format(msg)
+		log_write('info', str_out)
+		return HttpResponse("success")
 
 
 # 微信用户玩过一次游戏

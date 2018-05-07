@@ -3,6 +3,8 @@
 
 WeiXinAppID = 'wx0120979b198dbf4f'
 WeiXinSecret = '2baa626846df7b970935e572a29caab1'
+LeShanPublishAppID = 'wx5fe2c07bcda0ec31'
+LeShanPublishSecret = '8359a88aa655c0c7e9f47b26c05c9fdc'
 
 AccessPoint = { 
 	0 : 'api.weixin.qq.com',			# 通用域名

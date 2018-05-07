@@ -238,22 +238,28 @@ def WebSocketConnect(request):
 		
 	user = CheckUserToken(token)
 	if user == None:
-		return HttpResponse("{\"error\" : \"bad user\"}")
+		return HttpResponse("{\"error\":\"bad user\"}");
 
 	import uwsgi
 	uwsgi.websocket_handshake()
+	
+	websocket_fd = uwsgi.connection_fd()
+	
+
+	if g_kMachineMgr.SetMachineOnLine(user.username, token) == False:
+		str = "machine cant login : {0} {1}".format(user.username, token)
+		log_write('info', str);
+		
+		strRet = "{\"error\" : \"bad user\"}"
+		uwsgi.websocket_send(strRet)
+		return HttpResponse("{\"error\":\"bad user\"}");
+	
 	r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
 	channel = r.pubsub()
 	channel.subscribe(token)
 	
-	websocket_fd = uwsgi.connection_fd()
 	redis_fd = channel.connection._sock.fileno()
 	
-	if g_kMachineMgr.SetMachineOnLine(user.username, token) == False:
-		str = "machine cant login : {0} {1}".format(user.username, token)
-		log_write('info', str);
-		return HttpResponse("{\"error\":\"bad user\"}");
-
 	while True:
 		uwsgi.wait_fd_read(websocket_fd, 3)
 		uwsgi.wait_fd_read(redis_fd)
@@ -294,7 +300,7 @@ def WebSocketConnect(request):
 def CACheck(request):
 	return render(request,"fileauth.txt")
 
-def ShutDownMachine(requrest):
+def ShutDownMachine(request):
 	if request.method == 'POST':
 		oauth = request.META.get('HTTP_AUTHENTICATION','unkown')
 		admin = CheckAdminToken(oauth)

@@ -2,6 +2,7 @@
 import json
 import time
 import hashlib
+import redis
 from base.logger import *
 from base.defines import *
 from login.models import User_Info
@@ -29,9 +30,13 @@ class Machine:
 
 	def SendMsgToMachine(self, msg):
 		if self.isOnline == 1:
+			log_write('info', "is online publish operator")
 			try:
 				r = redis.StrictRedis(host="127.0.0.1", port=6379, db = 0)
-				channel = r.publish(token, msg)
+				log_write('info', "publish operator")
+				log_write('info', self.token)
+				channel = r.publish(self.token, msg)
+				return True
 			except:
 				return False
 		else:
@@ -70,16 +75,16 @@ class MachineMgr:
 			return False
 
 	def IsMachineOnline(self, username):
-		if self.userDic.has_key(username) and self.tokenDic.has_key(token):
-			return userDic[username].IsOnline()
+		if self.userDic.has_key(username):
+			return self.userDic[username].IsOnline()
 		else:
 			return 0
 
 	def ShutDownMachine(self, username):
 		if self.userDic.has_key(username):
 			if self.userDic[username].IsOnline() == 1:
-				OpStr = "{\"token\":\"{0}\", \"operate\":\"shutdown\"}".format(self.userDic[username].GetMachineToken())
-				return userDic[username].SendMsgToMachine(OpStr)				
+				OpStr = '{\"token\":\"' + self.userDic[username].GetMachineToken() + '\", \"operate\":\"shutdown\"}'
+				return self.userDic[username].SendMsgToMachine(OpStr)				
 			else:
 				return False
 		else:
