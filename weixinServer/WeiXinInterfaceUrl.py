@@ -21,3 +21,6 @@ GetTemporaryQrCodeUrl = '/cgi-bin/qrcode/create?access_token='
 
 # 获取用户信息
 GetWeiXinUserInfoUrl = '/cgi-bin/user/info?'
+
+# 获取微信全部资源列表
+GetAllMaterialsUrl = '/cgi-bin/material/batchget_material?access_token='

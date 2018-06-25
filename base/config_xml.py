@@ -119,15 +119,122 @@ class GameInfoMgr:
 sGameInfoMgr = GameInfoMgr()
 sDiscountsMgr = DiscountsMgr()
 
+class QrcodeInfo():
+	def __init__(self, qrcodeType, qrcodeParam, newsId):
+		self.qrcodeType = qrcodeType				# 二维码类型
+		self.qrcodeParam = qrcodeParam				# 二维码参数
+		self.newsId = newsId						# 消息id
+
+	def GetNewsId(self):
+		return self.newsId
+
+class QrcodeConfigMgr():
+	def __init__(self):
+		self.qrcodeInfos = {}
+	
+	def AddOneQrcode(self, qrcodeType, qrcodeParam, newsId):
+		#str = 'add one qrcode info : {0} {1} {2} {3} {4} {5} '.format(qrcodeType, qrcodeParam, title, description, picurl, url)
+		#log_write('info', str)
+		info = QrcodeInfo(qrcodeType, qrcodeParam, newsId)
+		self.qrcodeInfos[qrcodeType] = info
+
+	def GetQrcodeInfo(self, qrcodeType):
+		if self.qrcodeInfos.has_key(qrcodeType):
+			return self.qrcodeInfos[qrcodeType]
+		return None
+	
+	def Clear(self):
+		self.qrcodeInfos = {}
+
+sQrcodeInfoMgr = QrcodeConfigMgr()
+
+class WeChatNews():
+	def __init__(self, newsId, newsTitle, newsDesc, newsPicUrl, newsUrl):
+		self.newsId = newsId
+		self.newsTitle = newsTitle
+		self.newsDesc = newsDesc
+		self.newsPicUrl = newsPicUrl
+		self.newsUrl = newsUrl
+
+	def GetNewsId(self):
+		return self.newsId
+
+	def GetNewsTitle(self):
+		return self.newsTitle
+
+	def GetNewsDesc(self):
+		return self.newsDesc
+
+	def GetNewsPicUrl(self):
+		return self.newsPicUrl
+
+	def GetNewsUrl(self):
+		return self.newsUrl
+
+class WeChatNewsMgr():
+	def __init__(self):
+		self.WeChatNewsMap = {}
+
+	def AddWeChatNews(self, newsId, newsTitle, newsDesc, newsPicUrl, newsUrl):
+		news = WeChatNews(newsId, newsTitle, newsDesc, newsPicUrl, newsUrl)
+		self.WeChatNewsMap[newsId] = news
+
+	def GetWeChatNews(self, newsId):
+		if self.WeChatNewsMap.has_key(newsId):
+			return self.WeChatNewsMap[newsId]
+		else:
+			return None
+	
+	def Clear(self):
+		self.WeChatNewsMap = {}
+
+sWeChatNewsMgr = WeChatNewsMgr()
+
+class WeChatButton():
+	def __init__(self, ButtonKey, JumpNews):
+		self.ButtonKey = ButtonKey
+		self.JumpNews = JumpNews
+
+	def GetButtonKey(self):
+		return self.ButtonKey
+
+	def GetJumpNews(self):
+		return self.JumpNews
+
+class WeChatButtonMgr():
+	def __init__(self):
+		self.WeChatButtonMap = {}
+
+	def AddWeChatButton(self, ButtonKey, JumpNews):
+		newButton = WeChatButton(ButtonKey, JumpNews)
+		self.WeChatButtonMap[ButtonKey] = newButton
+
+	def GetWeChatButton(self, ButtonKey):
+		if self.WeChatButtonMap.has_key(ButtonKey):
+			return self.WeChatButtonMap[ButtonKey]
+		else:
+			return None
+
+	def Clear(self):
+		self.WeChatButtonMap = {}
+
+sWeChatButtonMgr = WeChatButtonMgr()
+
 class XmlConfigMgr():
 
 	def __init__(self):
 		self.InitGameInfoConfig()	
 		self.InitDiscountsInfoConfig()
+		self.InitQrcodeInfoConfig()
+		self.InitWeChatButtonConfig()
+		self.InitWeChatNewsConfig()
 
 	def reload(self):
 		self.InitGameInfoConfig()	
 		self.InitDiscountsInfoConfig()
+		self.InitQrcodeInfoConfig()
+		self.InitWeChatButtonConfig()
+		self.InitWeChatNewsConfig()
 
 	def InitGameInfoConfig(self):	
 		path = os.path.abspath('.')
@@ -138,9 +245,7 @@ class XmlConfigMgr():
 
 		DOMTree = xml.dom.minidom.parse(data_path)
 		data = DOMTree.documentElement
-		print data
 		nodelist = data.getElementsByTagName("gameinfo")
-		print nodelist
 		for node in nodelist:
 			log_write('info','one node')
 			gameid = node.getAttribute("gameid") 
@@ -158,9 +263,7 @@ class XmlConfigMgr():
 		
 		DOMTree = xml.dom.minidom.parse(data_path)
 		data = DOMTree.documentElement
-		print data
 		nodelist = data.getElementsByTagName("discountsInfo")
-		print nodelist
 		for node in nodelist:
 			log_write('info','one node')
 			goodsid = node.getAttribute("goodsid") 
@@ -177,6 +280,65 @@ class XmlConfigMgr():
 				disInfo.AddGamePrice(gameid, gameprice);
 
 			sDiscountsMgr.AddOneDiscountsInfo(disInfo)
+	
+	def InitQrcodeInfoConfig(self):
+		path = os.path.abspath('.')
+		data_path = os.path.join(path, 'config/qrcodeInfo.xml')
+
+		out_str = 'init qrcodeInfo xml : {0}'.format(data_path)
+		log_write('info', out_str)
+
+		sQrcodeInfoMgr.Clear()
+		DOMTree = xml.dom.minidom.parse(data_path)
+		data = DOMTree.documentElement
+		nodelist = data.getElementsByTagName("qrcodeInfo")
+		for node in nodelist:
+			qrcodeType = node.getAttribute("qrtype")
+			qrcodeParam = node.getAttribute("qrparam")
+			newsId = node.getAttribute("NewsId")
+			
+			#out_str = 'read from qrcodeconfig xml : {0} {1} {2}'.format(qrcodeType, qrcodeParam, resTitle)
+			#log_write('info', out_str)
+
+			sQrcodeInfoMgr.AddOneQrcode(qrcodeType, qrcodeParam, newsId)
+
+	def InitWeChatNewsConfig(self):
+		path = os.path.abspath('.')
+		data_path = os.path.join(path, 'config/WeChatNews.xml')
+
+		out_str = 'init WeChatNews xml : {0}'.format(data_path)
+		log_write('info', out_str)
+
+		sWeChatNewsMgr.Clear()
+		DOMTree = xml.dom.minidom.parse(data_path)
+		data = DOMTree.documentElement
+		nodelist = data.getElementsByTagName("News")
+		for node in nodelist:
+			newsId = node.getAttribute("id")
+			newsTitle = node.getAttribute("title")
+			newsDesc = node.getAttribute("desc")
+			newsPicUrl = node.getAttribute("picurl")
+			newsUrl = node.getAttribute("url")
+			
+			sWeChatNewsMgr.AddWeChatNews(newsId, newsTitle, newsDesc, newsPicUrl, newsUrl)
+
+
+	def InitWeChatButtonConfig(self):
+		path = os.path.abspath('.')
+		data_path = os.path.join(path, 'config/WeChatButton.xml')
+
+		out_str = 'init WeChatButton xml : {0}'.format(data_path)
+		log_write('info', out_str)
+
+		sWeChatButtonMgr.Clear()
+		DOMTree = xml.dom.minidom.parse(data_path)
+		data = DOMTree.documentElement
+		nodelist = data.getElementsByTagName("button")
+		for node in nodelist:
+			ButtonKey = node.getAttribute("key")
+			ButtonJump = node.getAttribute("jumpNews")
+			
+			sWeChatButtonMgr.AddWeChatButton(ButtonKey, ButtonJump)
 
 sXmlConfigMgr = XmlConfigMgr()
 

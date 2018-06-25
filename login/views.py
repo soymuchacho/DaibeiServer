@@ -22,6 +22,9 @@ from resourceManager.models import *
 import redis
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
+def index(request):
+	return render(request, "gongzhonghao/seal.html");
+
 
 # 帐号注册
 def Register(request):

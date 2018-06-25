@@ -59,7 +59,7 @@ ROOT_URLCONF = 'DaibeiServer.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+		'DIRS': [BASE_DIR+'/html'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -193,8 +193,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,'static')
 
 STATICFILES_DIRS = (
-	os.path.join(BASE_DIR,'login/templates'),
-	os.path.join(BASE_DIR,'resourceManager/templates'),
+	os.path.join(BASE_DIR,'html'),
 )
 
 TATICFILES_FINDERS = (
@@ -203,6 +202,6 @@ TATICFILES_FINDERS = (
 )
 
 
-MEDIA_URL = '/media/'
+MEDIA_URL = '/lankamres/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 

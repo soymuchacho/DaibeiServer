@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
+from django.views.decorators.csrf import csrf_exempt
 from .Sha1 import SHA1 
 from base.logger import *
+from base.config_xml import *
 from django.http import HttpRequest
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.cache import cache
 from login.Authentication import CheckUserToken 
+from login.Authentication import CheckAdminToken 
 from WeiXinInterfaceUrl import *
 from WeiXinAccess import *
+from WeiChatMaterial import *
 import ierror
 import urllib
 import urllib2
@@ -18,12 +22,27 @@ import xml.etree.cElementTree as ET
 import redis
 import time
 from LeShan import *
+from wechat_sdk import WechatBasic
+from wechat_sdk import WechatConf
+from wechat_sdk.exceptions import ParseError
+from wechat_sdk.messages import (TextMessage, VoiceMessage, ImageMessage, VideoMessage, LinkMessage, LocationMessage, EventMessage, ShortVideoMessage)
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 Token = '7539252CA3CB72C1FC8945292164D62E'
 EncodingAESKey = 'fQsc2ka2PK5mEJT41zs2iE3dixF9f7Vdr4nENPbJsNG'
+
+conf = WechatConf(
+		
+	token = '7539252CA3CB72C1FC8945292164D62E',
+	appid = WeiXinAppID,
+	appsecret = WeiXinSecret,
+	encrypt_mode = 'normal',
+	encoding_aes_key = 'fQsc2ka2PK5mEJT41zs2iE3dixF9f7Vdr4nENPbJsNG'
+)
+
+wechat_instance = WechatBasic(conf=conf)
 
 LeShanToken = '7123122CA3CB7DBSE8945292164D62E'
 
@@ -51,29 +70,27 @@ def GetWeiXinUserInfo(userOpenID):
 			return result
 	return result
 
-def MsgHandle(userOpenID):
-	log_write('info', 'MsgHandle')
-	log_write('info', userOpenID)
+def MsgHandle(qrcodeType,userOpenID, touserOpenID):
+	log_write('info','msg handle')
+	out_str = 'MsgHandle userOpenID {0} qrcodeType {1}'.format(userOpenID, qrcodeType)
+	log_write('info', out_str)
+
 	result = GetWeiXinUserInfo(userOpenID)	
-	log_write('info', 'GetWeiXinUserInfo')
-	log_write('info', result)
+	out_str = 'user weichat Info {0}'.format(result)
+	log_write('info', out_str)
+
 	if result.has_key("nickname"):
-		log_write('info', 'result has key nickname')
 		weixinNickName = result['nickname']	
 		weixinSex = result['sex']
-		log_write('info',weixinNickName)
-		log_write('info',weixinSex)
 		openidKey = 'WXOPENID_' + userOpenID
-		log_write('info',openidKey)
 		gametimes = cache.get(openidKey)
 		timestr = ''
 		timeoldstr = ''
 		if gametimes == None:
-			log_write('info','gametimes is none')
 			timestr = time.strftime('%Y-%m-%d',time.localtime(time.time()))
-			log_write('info',timestr)
 			gametimes = timestr + ':' + '3'
-			log_write('info',gametimes)
+			out_str = 'user {0} gametimes {1}'.format(openidKey,gametimes)
+			log_write('info', out_str)
 			cache.set(openidKey,gametimes, timeout=None)
 		else:
 			timeoldstr = time.strftime('%Y-%m-%d',time.localtime(time.time()))
@@ -81,6 +98,8 @@ def MsgHandle(userOpenID):
 			timestr = strSplit[0] 
 			if timeoldstr != timestr:
 				gametimes = timeoldstr + ':' + '3'
+				out_str = 'user {0} gametimes {1}'.format(openidKey,gametimes)
+				log_write('info', out_str)
 				cache.set(openidKey,gametimes, timeout=None)
 		
 		strSplit = gametimes.split(":")
@@ -92,12 +111,15 @@ def MsgHandle(userOpenID):
 				'gametimes' : strSplit[1]
 		}
 		msg_json = json.dumps(msg)
+		
+		log_write('info', 'BetBackMsg')
+		#return_msg = GetBackMsg(qrcodeType, userOpenID, touserOpenID)
 		return msg_json
 	else:
 		log_write('info', 'MsgHandle None')
 		return None
 
-def LeShanMsgHandle(weixinname):
+def LeShanMsgHandle(NType,weixinname):
 	log_write('info', 'LeShanMsgHandle')
 	log_write('info', weixinname)
 	discounttimes = cache.get(weixinname)
@@ -119,7 +141,7 @@ def LeShanMsgHandle(weixinname):
 	strSplit = discounttimes.split(":")
 	log_write('info', strSplit)
 	msg = {
-			'msgtype' : 'LeShanPublish',
+			'msgtype' : NType,
 			'username' : weixinname,
 			'openid' : weixinname,
 			'discounttimes' : strSplit[1]
@@ -167,73 +189,149 @@ def WeiXinCheckTest(request):
 
 
 # 微信验证
+@csrf_exempt
 def WeiXinCheck(request):
-	log_write('info', 'wei xin check')
+	out_str = 'recv msg from weichat server'
+	log_write('info', out_str)
 	request.encoding = 'utf8'
-	log_write('info', request)
-	if request.method == 'POST':
+	if request.method == 'GET':
+		sMsgSignature = request.GET.get('signature')
+		sTimestamp = request.GET.get('timestamp')
+		sNonce = request.GET.get('nonce')
+		sEchoStr = request.GET.get('echostr',None)
+		if not wechat_instance.check_signature(signature = sMsgSignature, timestamp=sTimestamp, nonce=sNonce):
+			return HttpResponseBadRequest('Verify Failed')
+
+		return HttpResponse(sEchoStr, content_type="text/plain")
+	elif request.method == 'POST':
 		sMsgSignature = request.GET.get('signature')
 		sTimestamp = request.GET.get('timestamp')
 		sNonce = request.GET.get('nonce')
 
-		log_write('info', sMsgSignature)
-		log_write('info', sTimestamp)
-		log_write('info', sNonce)
-		log_write('info', request.body)
-		ret,signature = SHA1().getSHA1(Token, sTimestamp, sNonce, '')
-		if ret != 0:
-			log_write('info', ret)
-			log_write('info', signature)
-			return ret,None
-		else:
-			if not signature == sMsgSignature:
-				return ierror.WXBizMsgCrypt_ValidateSignature_Error, None
-		return_msg = 'success'	
-		log_write('info', 'parse begin')
-		# 进行数据解析
+		out_str = 'recv msg from weichat server : {0} {1} {2} {3}'.format(sMsgSignature, sTimestamp, sNonce, request.body)
+		log_write('info', out_str)
+
+	#	ret,signature = SHA1().getSHA1(Token, sTimestamp, sNonce, '')
+	#	if ret != 0:
+	#		return ret,None
+	#	else:
+	#		if not signature == sMsgSignature:
+	#			out_str = 'weichat server msg check error : {0} {1}'.format(signature, sMsgSignature)
+	#			return ierror.WXBizMsgCrypt_ValidateSignature_Error, None
 	
-		xml_tree = ET.fromstring(request.body)
-		touser_name    = xml_tree.find("ToUserName")
-		fromOpenID    = xml_tree.find("FromUserName")
-		event = xml_tree.find("Event")
-		eventKey = xml_tree.find("EventKey")
-		log_write('info', eventKey)
-		log_write('info', 'parse End')
-		log_write('info', 'parse End')
+		if not wechat_instance.check_signature(signature = sMsgSignature, timestamp=sTimestamp, nonce=sNonce):
+			return HttpResponseBadRequest('Verify Failed')
+		
+		return_msg = '感谢关注'	
+		#log_write('info',request.body)
+		# 进行数据解析
+		#xml_tree = ET.fromstring(request.body)
+		#touser_name    = xml_tree.find("ToUserName")
+		#fromOpenID    = xml_tree.find("FromUserName")
+		#event = xml_tree.find("Event")
+		#eventKey = xml_tree.find("EventKey")
+		#log_write('info','parse success')
+		
+		try:
+			wechat_instance.parse_data(data=request.body)
+		except:
+			log_write('info', 'parse xml data error!!')
+			return HttpesponseBadRequest('Invalid XML Data')
+
 		r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
 		channel = r.pubsub()
-		
-		if event.text == 'subscribe':
-			log_write('info',' event subcribe')
-			log_write('info', eventKey.text)
-			clientname = eventKey.text.replace('qrscene_','')
-			token = cache.get(clientname)
-			log_write('info', token)
-			msg = MsgHandle(fromOpenID.text)
-			log_write('info',msg)
-			log_write('info','channel pubsub');	
-			channel.subscribe(token)
-			log_write('info','redis pubsub channel...');	
-			r.publish(token,msg)
-		elif event.text == 'SCAN':
-			log_write('info','scan')
-			log_write('info', eventKey.text)
-			token = cache.get(eventKey.text)
-			if token == None:
-				log_write('info','no user')
-			else:
-				log_write('info',token)
-				log_write('info',fromOpenID.text)
-				msg = MsgHandle(fromOpenID.text)
-				log_write('info',msg)
-				log_write('info','channel pubsub');	
+	
+		# 获取解析好的微信请求信息
+		message = wechat_instance.get_message()
+
+		# 默认消息
+		response = wechat_instance.response_text(
+				content = return_msg
+				)
+
+		if isinstance(message, EventMessage):
+			# 收到事件消息
+			if message.type == 'subscribe':
+				log_write('info', 'guan zhu event')
+				# 关注事件
+				qrcodeParam = message.key.replace('qrscene_','')
+				clientname = qrcodeParam.split("||")[0]
+				qrcodeType = qrcodeParam.split("||")[1]
+
+				token = cache.get(clientname)
+				out_str = 'parse weichat server msg : qrcodeType {0} clientname {1} token {2}'.format(qrcodeType, clientname, token)
+				log_write('info', out_str)	
+
+				msg = MsgHandle(qrcodeType, message.source, message.target)
 				channel.subscribe(token)
-				log_write('info','redis pubsub channel...');	
 				r.publish(token,msg)
-		else:
-			log_write('info',event.text)
-		log_write('info', 'success')
-		return HttpResponse(return_msg)
+				out_str = 'publish msg token({0}): {1}'.format(token, msg)
+				log_write('info', out_str)
+
+				qrInfo = sQrcodeInfoMgr.GetQrcodeInfo(qrcodeType)
+				if qrInfo != None:
+					jumpNews = sWeChatNewsMgr.GetWeChatNews(qrInfo.GetNewsId())
+					response = wechat_instance.response_news(
+							[{
+								'title' : jumpNews.GetNewsTitle(),
+								'description' : jumpNews.GetNewsDesc(),
+								'picurl' : jumpNews.GetNewsPicUrl(), 
+								'url' : jumpNews.GetNewsUrl(),
+							}]
+						)	
+					out_str = "guanzhu jump news: id {0} title {0}".format(jumpNews.GetNewsId(), jumpNews.GetNewsTitle())
+					log_write('info', out_str)
+			elif message.type == 'scan':
+				#已关注用户扫描二维码事件
+				log_write('info', 'scan event')
+				log_write('info', message)
+				qrcodeParam = message.key
+				clientname = qrcodeParam.split("||")[0]
+				qrcodeType = qrcodeParam.split("||")[1]
+				token = cache.get(clientname)
+				out_str = 'parse weichat server msg : qrcodeType {0} clientname {1} token {2} source {3}'.format(qrcodeType, clientname, token,
+						message.source)
+				log_write('info', out_str)	
+			
+				if token == None:
+					out_str = 'cant find user {0}'.format(clientname)
+					log_write('info',out_str)
+				else:
+					msg = MsgHandle(qrcodeType, message.source, message.target)
+					channel.subscribe(token)
+					r.publish(token,msg)
+					out_str = 'publish msg token({0}): {1}'.format(token, msg)
+					log_write('info', out_str)
+					qrInfo = sQrcodeInfoMgr.GetQrcodeInfo(qrcodeType)
+					if qrInfo != None:
+						jumpNews = sWeChatNewsMgr.GetWeChatNews(qrInfo.GetNewsId())
+						response = wechat_instance.response_news(
+							[{
+								'title' : jumpNews.GetNewsTitle(),
+								'description' : jumpNews.GetNewsDesc(),
+								'picurl' : jumpNews.GetNewsPicUrl(), 
+								'url' : jumpNews.GetNewsUrl(),
+							}]
+						)	
+					out_str = "scan jump news: id {0} title {0}".format(jumpNews.GetNewsId(), jumpNews.GetNewsTitle())
+					log_write('info', out_str)
+			elif message.type == 'click':
+				# 自定义菜单事件
+				buttonInfo = sWeChatButtonMgr.GetWeChatButton(message.key)
+				if buttonInfo != None:
+					jumpNews = sWeChatNewsMgr.GetWeChatNews(buttonInfo.GetJumpNews())
+					response = wechat_instance.response_news(
+						[{
+							'title' : jumpNews.GetNewsTitle(),
+							'description' : jumpNews.GetNewsDesc(),
+							'picurl' : jumpNews.GetNewsPicUrl(), 
+							'url' : jumpNews.GetNewsUrl(),
+						}]
+					)
+					out_str = "click button jump news: id {0} title {0}".format(jumpNews.GetNewsId(), jumpNews.GetNewsTitle())
+					log_write('info', out_str)
+
+		return HttpResponse(response, content_type="application/xml")
 
 # 获取带参数的微信二维码
 def WeiXinGetQrCode(request):
@@ -243,18 +341,25 @@ def WeiXinGetQrCode(request):
 		
 		log_write('info','-----request weixin QrCode-----');
 		
+		QrcodeType = request.GET.get("QrcodeType",None)
+
 		# 认证
 		user = CheckUserToken(oauth)
 		if user == None:
 			log_write('info','request weinxin QrCode bad user');
 			return HttpResponse("{\"error\" : \"bad user\"}")
 
-		# 设置参数
-
 		if WeiXinAccessSingleton.WeiXinAccessToken.strip() == '':
 			WeiXinAccessSingleton.GetWeiXinAccess()
+			
+		# 设置参数
+		QrcodeInfo = sQrcodeInfoMgr.GetQrcodeInfo(QrcodeType)	
+		if QrcodeInfo == None:
+			return HttpResponse("{\"error\" : \"bad param\"}")
 
-		postdata = '{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "' + user.username + '"}}}'
+		scene_str = user.username + '||' + QrcodeInfo.qrcodeParam
+		postdata = '{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "' + scene_str + '"}}}'
+		
 		reqURL = 'https://' + AccessPoint[0] + GetTemporaryQrCodeUrl + WeiXinAccessSingleton.WeiXinAccessToken
 
 		req = urllib2.Request(url = reqURL, data = postdata)
@@ -366,7 +471,12 @@ def LeShanServerNotice(request):
 		sTimestamp = request.GET.get('timestamps')
 		if sTimestamp == None:
 			return HttpResponse("error")
-		str_out = 'recv leshan server msg : {0} {1} {2}'.format(client, weixinid, sTimestamp)
+
+		sNType = request.GET.get("NType",None);
+		if sNType == None:
+			sNType = 'LeShanPublish'
+
+		str_out = 'recv server msg : {0} {1} {2} {3}'.format(client, weixinid, sTimestamp, sNType)
 		log_write('info', str_out)
 
 		r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
@@ -377,7 +487,7 @@ def LeShanServerNotice(request):
 		str_out = 'parse leshan server msg get client token : {0}'.format(token)
 		log_write('info',str_out)
 
-		msg = LeShanMsgHandle(weixinid)
+		msg = LeShanMsgHandle(sNType,weixinid)
 		
 		channel.subscribe(token)
 		r.publish(token,msg)
@@ -415,3 +525,114 @@ def WeiXinUserPlayedGame(request):
 		return HttpResponse("{\"msg\" : \"ok\"}")
 	else:	
 		return HttpResponse("{\"msg\" : \"BAD Request\"}")
+
+
+def GongZhongHaoHtml(request):
+	if request.method == 'GET':
+		return render(request, "gongzhonghao/seal.html");
+
+
+
+def CreateMenu(request):
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		menu = request.body
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		menu_dict = eval(menu.decode('utf-8'))
+		out_str = 'create menu : {0} type {1}'.format(menu_dict, type(menu_dict))
+		log_write('info', out_str)
+		response = wechat_instance.create_menu(menu_dict)
+		json_response = json.dumps(response)
+		return HttpResponse(json_response)
+
+def GetMenu(request):
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		
+		response = wechat_instance.get_menu()
+		log_write('info', response)
+		log_write('info',type(response))
+		json_response = json.dumps(response)
+		return HttpResponse(json_response)
+		
+
+def DeleteMenu(request):
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		
+		response = wechat_instance.delete_menu()
+		json_response = json.dumps(response)
+		return HttpResponse(json_response)
+
+
+def GetWechatUserList(request):
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		first_user_id = request.GET.get("first_user_id",None)
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+	
+		response = ""
+		if first_user_id == None:
+			response = wechat_instance.get_followers()
+		else:
+			response = wechat_instance.get_followers(first_user_id)
+		
+		log_write('info', response)
+		log_write('info',type(response))
+		json_response = json.dumps(response)
+		return HttpResponse(json_response)
+		
+
+
+
+def SendMessageToUser(request):
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		message_id = request.GET.get("message_id",None)
+		send_user_id = request.GET.get("send_user_id",None)
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+	
+		if message_id == None:
+			return HttpResponse("{\"error\" : \"bad message\"}")
+		
+		if send_user_id == None:
+			return HttpResponse("{\"error\" : \"bad send user\"}")
+			
+		qrInfo = sQrcodeInfoMgr.GetQrcodeInfo(qrcodeType)
+		if qrInfo != None:
+			jumpNews = sWeChatNewsMgr.GetWeChatNews(qrInfo.GetNewsId())
+			response = wechat_instance.send_article_message(send_user_id,
+					[{
+						'title' : jumpNews.GetNewsTitle(),
+						'description' : jumpNews.GetNewsDesc(),
+						'picurl' : jumpNews.GetNewsPicUrl(), 
+						'url' : jumpNews.GetNewsUrl(),
+					}]
+					)	
+			out_str = "guanzhu jump news: id {0} title {0}".format(jumpNews.GetNewsId(), jumpNews.GetNewsTitle())
+			log_write('info', out_str)
+		else:
+			return HttpResponse("{\"error\":\"bad message\"}")
+
+		return HttpResponse("{\"msg\":\"ok\"}")
+	
+
+
+
