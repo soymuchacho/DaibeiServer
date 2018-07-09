@@ -1,3 +1,4 @@
 <root>
-	<button key="V1001_LANKAM" jumpNews="0"/>
+	<button key="V1001_LANKAM" newsType="news" jumpNews="0"/>
+	<button key="V1002_REFUND" newsType="msg" jumpNews="温馨提示：如您在购买过程中，DOME互动售货机出现任何问题，导致您购买失败。您可将以下信息发送到本公众号:@@1.支付凭证详情截图@@2.备注出现问题的商品名称@@如DOME互动售货机出现故障或需维修，您可致电400-896-528"/>
 </root>

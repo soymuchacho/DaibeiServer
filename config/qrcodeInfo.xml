@@ -1,7 +1,7 @@
 <root>
     <qrcodeInfo qrtype="test" qrparam="test" NewsId="0"/>
-	<qrcodeInfo qrtype="Fruit" qrparam="Fruit" NewsId="1" />
-	<qrcodeInfo qrtype="Basketball" qrparam="Basketball" NewsId="2"/>
-    <qrcodeInfo qrtype="Nail" qrparam="Nail" NewsId="3"/>
-	 <qrcodeInfo qrtype="Dance" qrparam="Dance" NewsId="3"/>
+	<qrcodeInfo qrtype="Fruit" qrparam="Fruit" NewsId="0" />
+	<qrcodeInfo qrtype="Basketball" qrparam="Basketball" NewsId="0"/>
+    <qrcodeInfo qrtype="Nail" qrparam="Nail" NewsId="0"/>
+	 <qrcodeInfo qrtype="Dance" qrparam="Dance" NewsId="0"/>
 </root>

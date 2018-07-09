@@ -191,12 +191,16 @@ class WeChatNewsMgr():
 sWeChatNewsMgr = WeChatNewsMgr()
 
 class WeChatButton():
-	def __init__(self, ButtonKey, JumpNews):
+	def __init__(self, ButtonKey, MsgType, JumpNews):
 		self.ButtonKey = ButtonKey
+		self.MsgType = MsgType
 		self.JumpNews = JumpNews
 
 	def GetButtonKey(self):
 		return self.ButtonKey
+
+	def GetMsgType(self):
+		return self.MsgType
 
 	def GetJumpNews(self):
 		return self.JumpNews
@@ -205,8 +209,8 @@ class WeChatButtonMgr():
 	def __init__(self):
 		self.WeChatButtonMap = {}
 
-	def AddWeChatButton(self, ButtonKey, JumpNews):
-		newButton = WeChatButton(ButtonKey, JumpNews)
+	def AddWeChatButton(self, ButtonKey, MsgType, JumpNews):
+		newButton = WeChatButton(ButtonKey, MsgType, JumpNews)
 		self.WeChatButtonMap[ButtonKey] = newButton
 
 	def GetWeChatButton(self, ButtonKey):
@@ -220,6 +224,35 @@ class WeChatButtonMgr():
 
 sWeChatButtonMgr = WeChatButtonMgr()
 
+class Machine():
+	def __init__(self, machineid, wechatNumber):
+		self.machineID = machineid
+		self.wechatNumber = wechatNumber
+
+	def GetMachineID(self):
+		return self.machineID
+
+	def GetWechatNumber(self):
+		return self.wechatNumber
+
+class MachineMgr():
+	def __init__(self):
+		machines = {}
+
+	def AddMachine(self, machineID, wechatNumber):
+		newMachine = Machine(machineID, wechatNumber)
+		self.machines[wechatNumber] = newMachine
+
+	def GetMachineIDByWechatNumber(self, wechatNumber):
+		if self.machines.has_key(wechatNumber):
+			return self.machines[wechatNumber].GetMachineID()
+		return None
+
+	def Clear(self):
+		self.machines = {}
+
+sMachineMgr = MachineMgr()
+
 class XmlConfigMgr():
 
 	def __init__(self):
@@ -228,6 +261,7 @@ class XmlConfigMgr():
 		self.InitQrcodeInfoConfig()
 		self.InitWeChatButtonConfig()
 		self.InitWeChatNewsConfig()
+		self.InitMachineInfo()
 
 	def reload(self):
 		self.InitGameInfoConfig()	
@@ -235,6 +269,7 @@ class XmlConfigMgr():
 		self.InitQrcodeInfoConfig()
 		self.InitWeChatButtonConfig()
 		self.InitWeChatNewsConfig()
+		self.InitMachineInfo()
 
 	def InitGameInfoConfig(self):	
 		path = os.path.abspath('.')
@@ -336,9 +371,27 @@ class XmlConfigMgr():
 		nodelist = data.getElementsByTagName("button")
 		for node in nodelist:
 			ButtonKey = node.getAttribute("key")
+			MsgType = node.getAttribute("newsType")
 			ButtonJump = node.getAttribute("jumpNews")
 			
-			sWeChatButtonMgr.AddWeChatButton(ButtonKey, ButtonJump)
+			sWeChatButtonMgr.AddWeChatButton(ButtonKey, MsgType, ButtonJump)
+
+	def InitMachineInfo(self):
+		path = os.path.abspath('.')
+		data_path = os.path.join(path, 'config/Machine.xml')
+
+		out_str = 'init Machine xml : {0}'.format(data_path)
+		log_write('info', out_str)
+
+		sMachineMgr.Clear()
+		DOMTree = xml.dom.minidom.parse(data_path)
+		data = DOMTree.documentElement
+		nodelist = data.getElementsByTagName("Machine")
+		for node in nodelist:
+			machineID = node.getAttribute("machineid")
+			wechatNumber = node.getAttribute("wechatnumber")
+			
+			sMachineMgr.AddMachine(machineID, wechatNumber)
 
 sXmlConfigMgr = XmlConfigMgr()
 
