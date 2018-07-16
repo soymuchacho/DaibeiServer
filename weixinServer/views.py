@@ -19,8 +19,8 @@ import urllib
 import urllib2
 import json
 import xml.etree.cElementTree as ET
-import redis
 import time
+from base.redis_connect import *
 from LeShan import *
 from wechat_sdk import WechatBasic
 from wechat_sdk import WechatConf
@@ -30,8 +30,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-
-redis_connect = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
 
 Token = '7539252CA3CB72C1FC8945292164D62E'
 EncodingAESKey = 'fQsc2ka2PK5mEJT41zs2iE3dixF9f7Vdr4nENPbJsNG'
@@ -71,7 +69,6 @@ def GetWeiXinUserInfo(userOpenID, msgType):
 
 
 def MsgHandle(qrcodeType,userOpenID, touserOpenID, msgType="wechat"):
-	log_write('info','msg handle')
 	out_str = 'MsgHandle userOpenID {0} qrcodeType {1}'.format(userOpenID, qrcodeType)
 	log_write('info', out_str)
 
@@ -116,8 +113,6 @@ def MsgHandle(qrcodeType,userOpenID, touserOpenID, msgType="wechat"):
 		}
 		msg_json = json.dumps(msg)
 		
-		log_write('info', 'BetBackMsg')
-		#return_msg = GetBackMsg(qrcodeType, userOpenID, touserOpenID)
 		return msg_json
 	else:
 		log_write('info', 'MsgHandle None')
@@ -226,7 +221,7 @@ def WeiXinCheck(request):
 			log_write('info', 'parse xml data error!!')
 			return HttpesponseBadRequest('Invalid XML Data')
 
-		channel = redis_connect.pubsub()
+		channel = g_kRedisMgr.GetRedisConnect().pubsub()
 	
 		# 获取解析好的微信请求信息
 		message = wechat_instance.get_message()
@@ -251,7 +246,7 @@ def WeiXinCheck(request):
 
 				msg = MsgHandle(qrcodeType, message.source, message.target)
 				channel.subscribe(token)
-				redis_connect.publish(token,msg)
+				g_kRedisMgr.GetRedisConnect().publish(token,msg)
 				out_str = 'publish msg token({0}): {1}'.format(token, msg)
 				log_write('info', out_str)
 
@@ -286,7 +281,7 @@ def WeiXinCheck(request):
 				else:
 					msg = MsgHandle(qrcodeType, message.source, message.target)
 					channel.subscribe(token)
-					redis_connect.publish(token,msg)
+					g_kRedisMgr.GetRedisConnect().publish(token,msg)
 					out_str = 'publish msg token({0}): {1}'.format(token, msg)
 					log_write('info', out_str)
 					qrInfo = sQrcodeInfoMgr.GetQrcodeInfo(qrcodeType)
@@ -475,7 +470,7 @@ def LeShanServerNotice(request):
 		str_out = 'recv server msg : {0} {1} {2} {3}'.format(client, weixinid, sTimestamp, sNType)
 		log_write('info', str_out)
 
-		channel = redis_connect.pubsub()
+		channel = g_kRedisMgr.GetRedisConnect().pubsub()
 
 		token = cache.get(client)
 
@@ -485,7 +480,7 @@ def LeShanServerNotice(request):
 		msg = LeShanMsgHandle(sNType,weixinid)
 		
 		channel.subscribe(token)
-		redis_connect.publish(token,msg)
+		g_kRedisMgr.GetRedisConnect().publish(token,msg)
 		str_out = 'succcess publish msg : {0}'.format(msg)
 		log_write('info', str_out)
 		return HttpResponse("success")
@@ -724,7 +719,7 @@ def WeChatSubscription(request):
 				else:
 					msg = MsgHandle(qrcodeType, message.source, message.target)
 					channel.subscribe(token)
-					redis_connect.publish(token,msg)
+					g_kRedisMgr.GetRedisConnect().publish(token,msg)
 					out_str = 'publish msg token({0}): {1}'.format(token, msg)
 					log_write('info', out_str)
 					qrInfo = sQrcodeInfoMgr.GetQrcodeInfo(qrcodeType)
@@ -789,14 +784,15 @@ def SubscriptionAttention(request):
 		if int(nowTime) - int(sTimestamps) > 120:
 			return HttpResponseBadRequest('消息已过期')
 		
+		channel = g_kRedisMgr.GetRedisConnect().pubsub()
 		sMachine = sMachine.replace("@","")
-		sMachineID = sMachineMgr.GetMachineIDByWechatNumber(sMachine)
 		
-		out_str = "wechatNumber {0}  sMachineID {1}".format(sMachine, sMachineID)
-		log_write('info', out_str)
-
-		channel = redis_connect.pubsub()
+		token = cache.get(sMachine)			# 根据wechatNumber找到对应的token
 		msg = MsgHandle(sMachineID, sUserOpenID, '123', msgType="subscription")
+
+		channel.subscribe(token)
+		g_kRedisMgr.GetRedisConnect().publish(token,msg)
+
 		return HttpResponse("感谢关注")	
 	else:
 		return HttpResponseBadRequest("消息出错")

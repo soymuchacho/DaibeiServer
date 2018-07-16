@@ -23,7 +23,7 @@ def GenerateToken(username,token_secretkey):
 	log_write('info',token)
 	return token
 
-def RegisterUser(username,password,location):
+def RegisterUser(username,username2,password,location,manager,wechatType,wechatNumber):
 	# 先查询数据库用户是否已经存在
 	old_user = User_Info.objects.filter(username=username)
 	if len(old_user) != 0:
@@ -43,11 +43,12 @@ def RegisterUser(username,password,location):
 	now_time = time.strftime("%Y-%02m-%02d %02H:%02M:%02S",time.localtime(time.time()))
 	
 	# 用户不存在，创建
-	new_user = User_Info(username=username,password=password,location=location,use_time=now_time)
+	new_user = User_Info(username=username,username2=username2,password=password,location=location,manager=manager,use_time=now_time,wechatType=wechatType,wechatNumber=wechatNumber)
 	if new_user == None:
 		str = "用户{0}创建失败".format(username)
 		log_write('info',str)
 		return False
+
 	new_user.save()
 	return True
 

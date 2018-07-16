@@ -9,6 +9,7 @@ from .Online import *
 from django.core.cache import cache
 from base.logger import *
 from base.defines import *
+from base.ServerErrorCode import *
 import json
 import time
 import hashlib
@@ -19,36 +20,55 @@ from login.models import Admin_Info
 from login.sql import *
 from .Authentication import *
 from resourceManager.models import *
-import redis
+from base.redis_connect import *
 token_secretkey = "1qaz@WSX3edc$RFV5tgb^YHN7ujm*IK<0p;/"
 
 def index(request):
 	return render(request, "gongzhonghao/seal.html");
 
-
 # 帐号注册
 def Register(request):
 	if request.method == 'POST':
 		log_write('info','开始注册')
-		username = request.POST.get('username')
-		password = request.POST.get('password')
-		location = request.POST.get('location')
+		username = request.POST.get('username', None)			# 用户名
+		password = request.POST.get('password', None)			# 密码
+		location = request.POST.get('location', None)			# 地址
+		username2 = request.POST.get('username2', None)		# 机器外身编码
+		wechatType = request.POST.get('wechatType', None)		# 微信号类型
+		wechatNumber = request.POST.get('wechatNumber', None)	# 微信编码
+		manager = request.POST.get('manager', None)				# 管理人员
 		if username == None:
 			log_write('info','用户名错误')
-			return HttpResponse("{\"error\":\"用户名错误\"}")
+			return HttpResponse(SERVER_ERROR_CODE_NO_USERNAME)
 		if password == None:
 			log_write('info','密码错误')
-			return HttpResponse("{\"error\":\"密码错误\"}")
+			return HttpResponse(SERVER_ERROR_CODE_NO_PASSWORD)
 		if location == None:
 			log_write('info','位置信息错误')
-			return HttpResponse("{\"error\":\"位置信息错误\"}")
+			return HttpResponse(SERVER_ERROR_CODE_NO_LOCATION)
+		if username2 == None:
+			log_write('info', '机器外身编号错误')
+			return HttpResponse(SERVER_ERROR_CODE_NO_USERNAME_2)
+		if wechatType == None:
+			log_write('info', '微信号类型错误')
+			return HttpResponse(SERVER_ERROR_CODE_NO_WECHATTYPE)
+		if wechatNumber == None:
+			log_write('info', '微信号编码错误')
+			return HttpResponse(SERVER_ERROR_CODE_NO_WECHATNUMBER)
+		if manager == None:
+			log_write('info', '管理人员错误')
+			return HttpResponse(SERVER_ERROR_CODE_NO_MANAGER)
 		
-		log_write('info','开始注册')
-		bRet = RegisterUser(username,password,location)
+		out_str = "begin register {0} {1} {2} {3} {4} {5} {6}".format(username, password, location, username2, wechatType,wechatNumber,manager)
+		log_write('info', out_str)
+		
+		bRet = RegisterUser(username,username2, password,location, manager, wechatType, wechatNumber)
 		if bRet == False:
 			log_write('info','账号注册失败')
 			return HttpResponse("{\"error\":\"账号注册失败\"}")
+
 		log_write('info','帐号注册成功')
+		
 		return HttpResponse("{\"code\":\"200\",\"msg\" : \"ok\"}")
 	else:
 		return HttpResponse("{\"error\" : \"request post \"}")
@@ -81,6 +101,7 @@ def Authentication(request):
 
 			str = "user login : username {0} password {1} new token {2}".format(username,password,result)
 			log_write('info',str);
+
 			# 以username为key设置一个缓存，再以token为key设置一个token对应的username
 			oldtoken = cache.get(username)
 			if oldtoken != None:
@@ -88,10 +109,13 @@ def Authentication(request):
 				cache.set(oldtoken,username,timeout=None)
 				g_kMachineMgr.MachineOffLine(username, oldtoken);
 
-			cache.set(result,username,timeout=None)
-			cache.set(username,result,timeout=None)
-	
-			g_kMachineMgr.MachineLogin(username, result, user[0].location, user[0].manager, user[0].use_time)
+			cache.set(result,username,timeout=None)		# token对应的username
+			cache.set(username,result,timeout=None)		# username对应的token
+
+			if user[0].wechatType != 0 and user[0].wechatNumber != None:		# 订阅号
+				cache.set(user[0].wechatNumber, result)	# 订阅号编码对应的token 
+
+			g_kMachineMgr.MachineLogin(username, result, user[0].location, user[0].manager, user[0].use_time, user[0].wechatType, user[0].wechatNumber)
 
 			ret_json = json.dumps(ret_dict)
 			return HttpResponse(ret_json)
@@ -235,6 +259,7 @@ def GetAllUserList(request):
 			return HttpResponse(ret_json)		
 		return HttpResponse("{}")
 
+connectNumber = 0
 
 def WebSocketConnect(request):
 	token = request.GET.get("token");
@@ -245,27 +270,51 @@ def WebSocketConnect(request):
 
 	import uwsgi
 	uwsgi.websocket_handshake()
-	
 	websocket_fd = uwsgi.connection_fd()
-	
 
+#	channel = None
+#	if g_kMachineMgr.IsWebSocketConnect(user.username, token) == True:
 	if g_kMachineMgr.SetMachineOnLine(user.username, token) == False:
 		str = "machine cant login : {0} {1}".format(user.username, token)
 		log_write('info', str);
-		
+
 		strRet = "{\"error\" : \"bad user\"}"
 		uwsgi.websocket_send(strRet)
 		return HttpResponse("{\"error\":\"bad user\"}");
-	
-	r = redis.StrictRedis(host="127.0.0.1",port=6379, db = 0); 
-	channel = r.pubsub()
+	#	channel = g_kMachineMgr.GetWebPubsub(user.username, token)
+	#	channel.subscribe(token)
+	#	out_str = "{0} already connect , so don't reconnect redis".format(user.username)
+	#	log_write('info', out_str)
+	#else:
+		#out_str = "{0} no connect , connect redis".format(user.username)
+		#log_write('info', out_str)
+		#g_kMachineMgr.ConnectWebSocket(user.username, token) #g_kRedisMgr.GetRedisWebConnect().pubsub()
+		#channel = g_kMachineMgr.GetWebPubsub(user.username, token)
+		#channel.subscribe(token)
+
+	channel = g_kRedisMgr.GetRedisWebConnect().pubsub()
 	channel.subscribe(token)
-	
+
+	timeoutCount = 0
+	heartTime = int(time.time())
+
 	redis_fd = channel.connection._sock.fileno()
-	
+
 	while True:
 		uwsgi.wait_fd_read(websocket_fd, 3)
 		uwsgi.wait_fd_read(redis_fd)
+
+		curTime = int(time.time())
+		timeoutTime = curTime - heartTime
+		if timeoutTime > 100:
+			# 超时100秒
+			timeoutCount = timeoutCount + 1
+			if timeoutCount >= 1:
+				# 链接超时，将此链接关闭
+				out_str = "websocket connection time out  close fd {0}".format(websocket_fd)
+				log_write('info', out_str)
+				return ""
+		
 		uwsgi.suspend()
 		fd = uwsgi.ready_fd()
 		if fd > -1:
@@ -276,7 +325,9 @@ def WebSocketConnect(request):
 						output = 'fd[{0}] token[{1}] recv msg : {2}'.format(fd, token, msg)
 						log_write('info', output)
 						if msg == '@heart':
-							r.publish(token, msg)
+							heartTime = int(time.time())
+							timeoutCount = 0
+						g_kRedisMgr.GetRedisWebConnect().publish(token, msg)
 				except IOError:
 					channel.unsubscribe(token)
 					g_kMachineMgr.MachineOffLine(user.username, token);
@@ -292,13 +343,19 @@ def WebSocketConnect(request):
 				
 				if t == msg[0]:
 					uwsgi.websocket_send(msg[2])
+				#elif msg[0] == 'subscribe':
+				#	log_write('info', msg[2])
+				#	if msg[2] == 'disconnect':
+				#		output = 'fd[{0}] token[{1}] {2} call disconnect'.format(fd, token, user.username)
+				#		log_write('info', output)
+				#		return ""
 		else:
 			# on timeout call websocket_recv_nb again to manage ping/pong
 			msg = uwsgi.websocket_recv_nb()
 			if msg:
 				str = "ping pong : {0} {1} {2}".format(user.username, token, msg)
 				log_write('info', str);
-				r.publish(token, msg)
+				g_kRedisMgr.GetRedisWebConnect().publish(token, msg)
 
 def CACheck(request):
 	return render(request,"fileauth.txt")
