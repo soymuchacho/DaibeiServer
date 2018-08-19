@@ -66,7 +66,11 @@ urlpatterns = [
 	url(r'weixinServer/getwechatuserlist', weixin_views.GetWechatUserList, name="GetWechatUserList"),	# get wechat user list
 	url(r'weixinServer/sendmessagetouser', weixin_views.SendMessageToUser, name="SendMessageToUser"),	# get wechat user list
 	# 公众号页面
-	url(r'weichat/service/login$', weixin_views.GongZhongHaoHtml, name="GongZhongHaoHtml"),
+	url(r'weichat/card/upload/getcoverurl$', weixin_views.GetUploadCardCoverUrl, name="GetUploadCardCoverUrl"), # 上传优惠券封面图片
+	url(r'weichat/card/create$', weixin_views.CreateCards, name="CreateCards"), # 创建卡券 
+	url(r'weichat/card/landingpage/create$', weixin_views.CreateCardLandingPage, name="CreateCardLandingPage"), # 创建货架
+	url(r'weichat/card/consume$', weixin_views.CardConsume, name="CardConsume"), # 核销卡券
+
 	# 文件验证
 	url(r'^weichat/service/(?P<path>MP_verify_CEXIoQ10fMyS2aS8.txt)$', serve, {'document_root': settings.BASE_DIR + '/www'}),
 ]

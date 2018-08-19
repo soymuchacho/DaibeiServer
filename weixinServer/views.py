@@ -797,3 +797,12 @@ def SubscriptionAttention(request):
 	else:
 		return HttpResponseBadRequest("消息出错")
 
+
+def GetUploadCardCoverUrl(request): # 上传优惠券封面图
+
+def CreateCards(request): # 创建卡券 
+	
+def CreateCardLandingPage(request): # 创建货架
+
+def CardConsume(request): # 核销卡券
+
