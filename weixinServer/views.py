@@ -26,6 +26,7 @@ from wechat_sdk import WechatBasic
 from wechat_sdk import WechatConf
 from wechat_sdk.exceptions import ParseError
 from wechat_sdk.messages import (TextMessage, VoiceMessage, ImageMessage, VideoMessage, LinkMessage, LocationMessage, EventMessage, ShortVideoMessage)
+from wechatpy import *
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -51,10 +52,33 @@ SubscriptionConf = WechatConf(
 	encrypt_mode = 'normal',
 )
 
+
 wechat_instance = WechatBasic(conf=conf)
 wechat_subscription_instance = WechatBasic(conf=SubscriptionConf)
 
 LeShanToken = '7123122CA3CB7DBSE8945292164D62E'
+
+
+##################################################################
+#
+#					wechatpy
+#
+#################################################################
+# AccessToken持久化存储
+
+redis_client = Redis.from_url('redis://127.0.0.1:6379/0')
+session_interface = RedisStorage(
+			redis_client,
+			prefix="wechatpy"
+		)
+
+wechatpy_client = WeChatClient(
+		WeiXinAppID, 
+		WeiXinSecret,
+		session=session_interface
+	)
+
+
 
 # 获取用户信息
 def GetWeiXinUserInfo(userOpenID, msgType):
@@ -799,10 +823,65 @@ def SubscriptionAttention(request):
 
 
 def GetUploadCardCoverUrl(request): # 上传优惠券封面图
+	if request.method == 'GET':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+		
+		upload_url = 'https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=' + wechatpy_client.access_token;
+		ret = "{\"url\":\"{0}\"}".format(upload_url)
+		return HttpResponse(ret)	
+	else:
+		return HttpResponseBadRequest("{\"error\":\"bad request\"}")
 
 def CreateCards(request): # 创建卡券 
-	
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		post_data = request.POST.get('data',None)
+		if post_data == None:
+			return HttpResponse("{\"error\":\"bad post data\"}")
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
+
+		cardid = wechat_client.api.WeChatCard.create(post_data)
+		
+		return HttpResponse(cardid)	
+	else:
+		return HttpResponseBadRequest("{\"error\":\"bad request\"}")
+
 def CreateCardLandingPage(request): # 创建货架
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		post_data = request.POST.get('data',None)
+		if post_data == None:
+			return HttpResponse("{\"error\":\"bad post data\"}")
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
 
+		result = wechat_client.api.WeChatCard.create_landingpage(post_data)
+		
+		return HttpResponse(result)	
+	else:
+		return HttpResponseBadRequest("{\"error\":\"bad request\"}")
 def CardConsume(request): # 核销卡券
+	if request.method == 'POST':
+		oauth = request.META.get('HTTP_AUTHENTICATION', 'unkown') 
+		card_code = request.POST.get('data',None)
+		if card_code == None:
+			return HttpResponse("{\"error\":\"bad post data\"}")
+		# 认证
+		admin = CheckAdminToken(oauth)
+		if admin == None:
+			return HttpResponse("{\"error\" : \"bad user\"}")
 
+		wechat_client.api.WeChatCard.consume_card(card_code)
+		
+		return HttpResponse(cardid)	
+	else:
+		return HttpResponseBadRequest("{\"error\":\"bad request\"}")
